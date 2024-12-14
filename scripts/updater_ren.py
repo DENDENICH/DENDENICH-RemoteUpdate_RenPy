@@ -35,7 +35,7 @@ class Scrto:
         
     def __init__(
         self,
-        path: str = './game/scrto.enc'
+        path: str
     ):
 
         self.__path = path
@@ -68,49 +68,73 @@ class Updater:
         
     def __init__(
         self, 
-        disk_token: str, 
-        local_game_dir: str = "./game", 
-        remote_version_game: str = "/game/version.txt", 
-        remote_game_archive: str = "/game/update.zip",
-        update_archive: str = "update.zip"
+        server_token: str, 
+        path_local_game_dir: str, 
+        url_remote_version_game: str, 
+        url_remote_game_archive: str,
+        update_archive: str
             ):
+        
+        """
+        params: disk_token: str - токен аутентификации для подключения к серверу
+        params: local_game_dir: str - путь к папке game
+        params: remote_version_game: str - api путь к файлу с актуальной версией игры
+        params: remote_game_archive: str - api путь к файлу с актуальным патчем игры
+        params: update_archive: str - название архива для скачивания в него обновления
+        """
 
-        self.local_game_dir = Path(local_game_dir)       
-        self.local_game_version = self.local_game_dir / 'version.txt'
-        self.remote_version_game = remote_version_game
-        self.remote_game_archive = remote_game_archive
+        self.server_token = server_token
+        self.path_local_game_dir = path_local_game_dir      
+        self.path_local_game_version = self.local_game_dir / 'version.txt'
+        self.url_remote_version_game = url_remote_version_game
+        self.url_remote_game_archive = url_remote_game_archive
         self.update_archive = update_archive
 
 
-    def get_headers(self):
+    def _get_headers(self) -> dict:
+        """Формирование заголовка"""
+
         return {
             "Authorization": f"OAuth {self.disk_token}"
         }
 
 
-    def fetch_remote_version(self):
+    def fetch_remote_version(self) -> str:
+        """Получение актуальной версии игры"""
+
         http = urllib3.PoolManager()
-        url = f"{DISK_BASE_URL}/download?path={self.remote_version_file}"
-        response = http.request("GET", url, headers=self.get_headers())
+        response = http.request(
+            method="GET", 
+            url=self.url_remote_version_game, 
+            headers=self._get_headers()
+            )
 
         if response.status == 200:
             download_url = response.data.decode("utf-8")
-            response = http.request("GET", download_url)
+            response = http.request(
+                method="GET", 
+                url=download_url
+                )
             return response.data.decode("utf-8").strip()
         else:
             raise Exception("Не удалось получить версию с сервера")
         
 
     def download_update(self):
+        """Скачивание актуального патча"""
+
         http = urllib3.PoolManager()
-        url = f"{DISK_BASE_URL}/download?path={self.remote_game_archive}"
-        response = http.request("GET", url, headers=self.get_headers())
+        response = http.request(
+            method="GET", 
+            url=self.url_remote_game_archive, 
+            headers=self.get_headers()
+            )
 
         if response.status == 200:
             download_url = response.data.decode("utf-8")
-            with http.request("GET", download_url, preload_content=False) as r, open(self.local_update_path, "wb") as out_file:
+            with http.request("GET", download_url, preload_content=False) as r, open(self.update_archive, "wb") as out_file:
                 out_file.write(r.data)
-            return self.local_update_path
+            return self.update_archive
         else:
             raise Exception("Не удалось скачать обновление")
 
