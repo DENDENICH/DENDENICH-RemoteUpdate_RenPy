@@ -178,7 +178,7 @@ class Updater:
     
 
 
-def get_updater():
+def get_updater() -> Updater:
     """Функция создания и возврата объекта обновления Updater"""
 
     PATH_LOCAL_GAME_DIR = os.path.abspath(__file__).replace(
