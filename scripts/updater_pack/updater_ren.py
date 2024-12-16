@@ -1,7 +1,8 @@
 import os
+import json
+from pathlib import Path
 
 import zipfile
-import json
 from urllib3 import PoolManager
 
 from .log import logger
@@ -86,7 +87,7 @@ class Updater:
 
     def download_update(
             self,
-            update_archive: str = "update.zip"
+            update_archive: str = "update.rar"
             ) -> bool:
         """Скачивание актуального патча"""
 
@@ -114,7 +115,7 @@ class Updater:
 
     def apply_update(
             self,
-            update_archive: str = "update.zip"
+            update_archive: str = "update.rar"
         ) -> bool:
         """Распаковывает архив обновления и добавляет/заменяет файлы в локальной директории игры."""
             
@@ -137,7 +138,7 @@ class Updater:
 
 
     def is_update_available(self) -> bool:
-        return self.exist_version == self.new_version
+        return self._exist_version == self._fetch_remote_version
     
 
 __all__ = ['Updater']
