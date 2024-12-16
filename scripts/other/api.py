@@ -18,9 +18,8 @@ def get_download_href(
         response = http.request('GET', url, headers=headers)
         if response.status == 200:
             data = response.data.decode('utf-8')
-            json_data = json.loads(data)
-            href = json_data['href']
-            return href
+            json_data = json.loads(data)['href']
+            return json_data
         else:
             print(f'Error: {response.status} - {response.reason}')
             return None
@@ -31,7 +30,7 @@ def get_download_href(
 def download(
         url: str,
 ):
-    """"""
+    """Download file"""
     response = http.request('GET', url, headers=headers)
     if response.status == 200:
         data = response.data.decode()

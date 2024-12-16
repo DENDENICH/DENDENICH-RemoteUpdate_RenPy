@@ -1,31 +1,10 @@
-import hashlib
-import base64
-from cryptography.fernet import Fernet
-
 import os
 
 import zipfile
-import urllib3
+import json
+from urllib3 import PoolManager
 
 from .log import logger
-
-
-def get_scrto(path: str) -> str | None:
-
-    try:
-        index = hashlib.sha256('scarlet_snowScRt0'.encode()).hexdigest()
-        key = hashlib.sha256(index.encode()).digest()[:32]
-
-        cipher = Fernet(base64.urlsafe_b64encode(key))
-        with open(path, "rb") as f:
-            encrp = f.read()
-        decrp = cipher.decrypt(encrp).decode("utf-8")
-        return decrp
-
-    except Exception as e:
-        logger.error(msg=f"Error get and decode scrto: \n\t{e}")
-        return None
-        
 
 
 class Updater:
@@ -50,34 +29,39 @@ class Updater:
         self.path_local_game_version = self.path_local_game_dir + '/version.txt'
         self.url_remote_version_game = url_remote_version_game
         self.url_remote_game_archive = url_remote_game_archive
+        self.http = PoolManager()
 
     @property
     def _get_headers(self) -> dict:
         """Формирование заголовка"""
 
         return {
-            "Authorization": f"OAuth {self.scrto}"
-        }
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': f'OAuth {self.scrto}'
+}
 
     @property
     def _fetch_remote_version(self) -> str | None:
         """Получение актуальной версии игры"""
 
         try:
-            http = urllib3.PoolManager()
-            response = http.request(
+            response = self.http.request(
                 method="GET", 
                 url=self.url_remote_version_game, 
                 headers=self._get_headers
                 )
 
             if response.status == 200:
-                download_url = response.data.decode("utf-8")
-                response = http.request(
+                content = response.data.decode("utf-8")
+                download_url = json.loads(content)['href']
+                response = self.http.request(
                     method="GET", 
                     url=download_url
                     )
-                return response.data.decode("utf-8").strip()
+                version = response.data.decode("utf-8").strip()
+                logger.error(msg=f'Версия успешно полученна с удаленного сервера - {version}')
+                return version
             else:
                 logger.error(msg=f'При запросе возникла ошибка - {response.status}')
                 return None
@@ -107,8 +91,7 @@ class Updater:
         """Скачивание актуального патча"""
 
         try:
-            http = urllib3.PoolManager()
-            response = http.request(
+            response = self.http.request(
                 method="GET", 
                 url=self.url_remote_game_archive, 
                 headers=self._get_headers
@@ -116,7 +99,7 @@ class Updater:
 
             if response.status == 200:
                 download_url = response.data.decode("utf-8")
-                with http.request("GET", download_url, preload_content=False) as r, open(update_archive, "wb") as out_file:
+                with self.http.request("GET", download_url, preload_content=False) as r, open(update_archive, "wb") as out_file:
                     out_file.write(r.data)
                 logger.info(msg='Обновление успешно скачано')
                 return True
@@ -157,8 +140,4 @@ class Updater:
         return self.exist_version == self.new_version
     
 
-
-__all__ = [
-    'Updater',
-    'get_scrto'
-    ]
+__all__ = ['Updater']
