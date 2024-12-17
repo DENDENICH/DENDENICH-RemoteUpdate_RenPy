@@ -20,14 +20,20 @@ class Updater:
         
         """
         params: disk_token: str - токен аутентификации для подключения к серверу
-        params: local_game_dir: str - путь к папке game
+        params: local_game_dir: str - путь к game/
         params: remote_version_game: str - api путь к файлу с актуальной версией игры
         params: remote_game_archive: str - api путь к файлу с актуальным патчем игры
         """
 
         self.scrto = scrto
-        self.path_local_game_dir = path_local_game_dir      
-        self.path_local_game_version = self.path_local_game_dir + '/version.txt'
+
+        self.path_local_game_dir = Path(path_local_game_dir)
+        self.path_local_game_version = self.path_local_game_dir / '/version.txt'
+        self.update_zip = self.path_local_game_dir / 'update.zip'
+
+        self.remote_version = self._fetch_remote_version
+        self.exist_version = self._exist_version
+
         self.url_remote_version_game = url_remote_version_game
         self.url_remote_game_archive = url_remote_game_archive
         self.http = PoolManager()
@@ -76,19 +82,15 @@ class Updater:
     def _exist_version(self) -> str | None:
         """Получение текущей версии игры"""
 
-        version_file = os.path.join(self.path_local_game_dir, "version.txt")
-        if os.path.exists(version_file):
-            with open(version_file, "r") as f:
+        if os.path.exists(self.path_local_game_version):
+            with open(self.path_local_game_version, "r") as f:
                 return f.read().strip()
         else:
             logger.error(msg=f'Файл <version.txt> отсутствует в системе')
             return None
         
 
-    def download_update(
-            self,
-            update_archive: str = "update.rar"
-            ) -> bool:
+    def download_update(self) -> bool:
         """Скачивание актуального патча"""
 
         try:
@@ -99,9 +101,16 @@ class Updater:
                 )
 
             if response.status == 200:
-                download_url = response.data.decode("utf-8")
-                with self.http.request("GET", download_url, preload_content=False) as r, open(update_archive, "wb") as out_file:
-                    out_file.write(r.data)
+                content = response.data.decode("utf-8")
+                download_url = json.loads(content)['href']
+                with self.http.request("GET", download_url, preload_content=False) as update, open(self.update_zip, "wb") as out_file:
+                    chunk_size = 1024 * 1024  # Размер блока (1 MB)
+                    while True:
+                        data = update.read(chunk_size)
+                        if not data:
+                            break
+                        out_file.write(data)
+                update.release_conn()
                 logger.info(msg='Обновление успешно скачано')
                 return True
             else:
@@ -113,22 +122,23 @@ class Updater:
             return False
 
 
-    def apply_update(
-            self,
-            update_archive: str = "update.rar"
-        ) -> bool:
+    def apply_update(self) -> bool:
         """Распаковывает архив обновления и добавляет/заменяет файлы в локальной директории игры."""
             
         try:
-            with zipfile.ZipFile(self.update_archive, "r") as zip_ref:
-                for file_info in zip_ref.infolist():                        
-                    extracted_path = self.local_game_dir / file_info.filename
+            with zipfile.ZipFile(self.update_zip, "r") as update_zip:
+                for file_info in update_zip.infolist():
+                    extracted_path = self.path_local_game_dir / file_info.filename
                     if file_info.is_dir():
-                        extracted_path.mkdir(parents=True, exist_ok=True)
+                        os.makedirs(
+                            name=extracted_path,
+                            exist_ok=True
+                        )
                     else:
-                            extracted_path.parent.mkdir(parents=True, exist_ok=True)
+                        os.makedirs(os.path.dirname(extracted_path), exist_ok=True)
+                        with update_zip.open(file_info) as src_file:
                             with extracted_path.open("wb") as output_file:
-                                output_file.write(zip_ref.read(file_info))
+                                output_file.write(src_file.read())
                 logger.info(msg='Обновление успешно установлено')
                 return True
 
@@ -138,7 +148,19 @@ class Updater:
 
 
     def is_update_available(self) -> bool:
-        return self._exist_version == self._fetch_remote_version
+        return self.exist_version == self.remote_version
+    
+
+    def update_exist_version(self) -> bool:
+        """Обновление текущей версии игры"""
+
+        if os.path.exists(self.path_local_game_version):
+            with open(self.path_local_game_version, "w") as f:
+                f.write(self.remote_version)
+                return True
+        else:
+            logger.error(msg=f'Файл <version.txt> отсутствует в системе')
+            return None 
     
 
 __all__ = ['Updater']

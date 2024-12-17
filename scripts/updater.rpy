@@ -41,13 +41,13 @@ screen updater_screen():
 
             # Процедуры скачивания и установки обновления
             text "Скачивание обновления..." style "menu_text_highlight"
-            if updater.download_update:
+            if updater.download_update():
                 text "Обновление успешно скачано" style "menu_text_highlight"
             else:
                 text "Ошибка при скачивании обновления" style "menu_text_highlight"
 
             text "Установка обновления..." style "menu_text_highlight"
-            if updater.apply_update and updater.update_version:
+            if updater.apply_update() and updater.update_exist_version():
                 text "Обновление успешно установленно" style "menu_text_highlight"
             else:
                 text "Ошибка при установки обновления" style "menu_text_highlight"
