@@ -2,7 +2,7 @@ import hashlib
 import base64
 from cryptography.fernet import Fernet
 
-from .log import logger
+from log import logger
 
 
 

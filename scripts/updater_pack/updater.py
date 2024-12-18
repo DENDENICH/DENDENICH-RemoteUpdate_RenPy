@@ -1,11 +1,10 @@
 import os
 import json
-from pathlib import Path
 
 import zipfile
 from urllib3 import PoolManager
 
-from .log import logger
+from log import logger
 
 
 class Updater:
@@ -27,16 +26,16 @@ class Updater:
 
         self.scrto = scrto
 
-        self.path_local_game_dir = Path(path_local_game_dir)
-        self.path_local_game_version = self.path_local_game_dir / '/version.txt'
-        self.update_zip = self.path_local_game_dir / 'update.zip'
-
-        self.remote_version = self._fetch_remote_version
-        self.exist_version = self._exist_version
+        self.path_local_game_dir = path_local_game_dir
+        self.path_local_game_version = self.path_local_game_dir + '/version.txt'
+        self.update_zip = self.path_local_game_dir + 'update.zip'
 
         self.url_remote_version_game = url_remote_version_game
         self.url_remote_game_archive = url_remote_game_archive
         self.http = PoolManager()
+
+        self.remote_version = self._fetch_remote_version
+        self.exist_version = self._exist_version
 
     @property
     def _get_headers(self) -> dict:
@@ -128,7 +127,7 @@ class Updater:
         try:
             with zipfile.ZipFile(self.update_zip, "r") as update_zip:
                 for file_info in update_zip.infolist():
-                    extracted_path = self.path_local_game_dir / file_info.filename
+                    extracted_path = self.path_local_game_dir + file_info.filename
                     if file_info.is_dir():
                         os.makedirs(
                             name=extracted_path,
@@ -137,7 +136,7 @@ class Updater:
                     else:
                         os.makedirs(os.path.dirname(extracted_path), exist_ok=True)
                         with update_zip.open(file_info) as src_file:
-                            with extracted_path.open("wb") as output_file:
+                            with open(extracted_path, "wb") as output_file:
                                 output_file.write(src_file.read())
                 logger.info(msg='Обновление успешно установлено')
                 return True
@@ -148,7 +147,7 @@ class Updater:
 
 
     def is_update_available(self) -> bool:
-        return self.exist_version == self.remote_version
+        return self.exist_version != self.remote_version
     
 
     def update_exist_version(self) -> bool:
@@ -160,7 +159,7 @@ class Updater:
                 return True
         else:
             logger.error(msg=f'Файл <version.txt> отсутствует в системе')
-            return None 
+            return False
     
 
 __all__ = ['Updater']
