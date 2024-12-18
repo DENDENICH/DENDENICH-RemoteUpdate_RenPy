@@ -1,2 +1,2 @@
-from .updater_ren import Updater
-from .scrto_ren import get_scrto
+from .updater import Updater
+from .scrto import get_scrto
