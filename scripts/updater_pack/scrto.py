@@ -2,11 +2,10 @@ import hashlib
 import base64
 from cryptography.fernet import Fernet
 
-from log import logger
+from .log import logger
 
 
-
-def get_scrto(path: str) -> str | None:
+def get_scrto(path) -> str | None:
 
     try:
         index = hashlib.sha256('scarlet_snowScRt0'.encode()).hexdigest()

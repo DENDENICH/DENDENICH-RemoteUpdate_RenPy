@@ -4,7 +4,7 @@ from logging import Logger
 
 
 def create_logger(
-    file_path: str = "debug_update.log"
+    file_path: str
     ) -> Logger:
     """Функция создания логера для вывода отладки процесса обновления"""
 
@@ -19,6 +19,8 @@ def create_logger(
 
     return logging.getLogger('main_logger')
 
-logger = create_logger()
+logger = create_logger(
+    file_path='update_log'
+)
 
 __all__ = ['logger']
