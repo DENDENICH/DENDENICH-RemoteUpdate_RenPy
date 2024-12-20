@@ -1,25 +1,7 @@
-import os
-from updater_pack import Updater, get_scrto
-
-def get_updater() -> Updater:
-    """Функция создания и возврата объекта обновления Updater"""
-
-    PATH_LOCAL_GAME_DIR = os.path.abspath(__file__).replace(os.path.basename(__file__), '')   
-    SCRTO = get_scrto(
-        path=PATH_LOCAL_GAME_DIR + '/scrto.enc'
-        )
-    URL_REMOTE_GAME_VERSION = '/game/version.txt'
-    URL_REMOTE_GAME_ARCHIVE = 'game/update.zip'
-
-    return Updater(
-        scrto=SCRTO,
-        url_remote_version_game=URL_REMOTE_GAME_VERSION,
-        url_remote_game_archive=URL_REMOTE_GAME_ARCHIVE,
-        path_local_game_dir=PATH_LOCAL_GAME_DIR
-    )
+from updater_pack import Updater
 
 
-updater = get_updater()
+updater = Updater()
 
 #renpy code
 """renpy

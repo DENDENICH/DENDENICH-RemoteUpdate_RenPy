@@ -1,38 +1,52 @@
 import os
 import json
+from pathlib import Path
 
-import zipfile
+from zipfile import ZipFile
 from urllib3 import PoolManager
 
-from log import logger
+from .log import logger
+from .scrto import get_scrto
+from .utils import (
+    get_path_game_dir,
+    get_path_update_remote,
+    get_path_version_remote
+)
 
 
 class Updater:
         
     def __init__(
-        self, 
-        scrto: str, 
-        path_local_game_dir: str, 
-        url_remote_version_game: str, 
-        url_remote_game_archive: str,
+        self,
+        path_local_game_dir: str = get_path_game_dir(), 
+        url_remote_version_game: str = get_path_version_remote(), 
+        url_remote_game_archive: str = get_path_update_remote(), 
         ):
         
         """
-        params: disk_token: str - токен аутентификации для подключения к серверу
-        params: local_game_dir: str - путь к game/
+        params: scrto: str - путь к файлу токена для аутентификации запросов на сервер
+        params: local_game_dir: str - путь к игры game
         params: remote_version_game: str - api путь к файлу с актуальной версией игры
         params: remote_game_archive: str - api путь к файлу с актуальным патчем игры
         """
 
-        self.scrto = scrto
+        # добавить аргумент **kwargs для возможности 
+        # вносить аргумента незашифрованого ключа аутентификации
 
-        self.path_local_game_dir = path_local_game_dir
-        self.path_local_game_version = self.path_local_game_dir + '/version.txt'
-        self.update_zip = self.path_local_game_dir + 'update.zip'
+        self.path_local_game_dir = Path(path_local_game_dir)
+
+        # получение расшифрованного токена
+        self.__scrto = get_scrto(
+            path=self.path_local_game_dir + '/scrto.enc'
+        )
+
+        self.http = PoolManager()
+
+        self.path_local_game_version = self.path_local_game_dir / '/version.txt'
+        self.update_zip = self.path_local_game_dir / 'update.zip'
 
         self.url_remote_version_game = url_remote_version_game
         self.url_remote_game_archive = url_remote_game_archive
-        self.http = PoolManager()
 
         self.remote_version = self._fetch_remote_version
         self.exist_version = self._exist_version
@@ -124,22 +138,30 @@ class Updater:
     def apply_update(self) -> bool:
         """Распаковывает архив обновления и добавляет/заменяет файлы в локальной директории игры."""
             
+        # try:
+        #     with zipfile.ZipFile(self.update_zip, "r") as update_zip:
+        #         for file_info in update_zip.infolist():
+        #             extracted_path = self.path_local_game_dir / file_info.filename
+        #             if file_info.is_dir():
+        #                 os.makedirs(
+        #                     name=extracted_path,
+        #                     exist_ok=True
+        #                 )
+        #             else:
+        #                 os.makedirs(os.path.dirname(extracted_path), exist_ok=True)
+        #                 with update_zip.open(file_info) as src_file:
+        #                     with extracted_path.open("wb") as output_file:
+        #                         output_file.write(src_file.read())
+        #         logger.info(msg='Обновление успешно установлено')
+        #         return True
+
+        # except Exception as e:
+        #     logger.error(msg=f"Ошибка применения обновления: \n\t{e}")
+        #     return False
+
         try:
-            with zipfile.ZipFile(self.update_zip, "r") as update_zip:
-                for file_info in update_zip.infolist():
-                    extracted_path = self.path_local_game_dir + file_info.filename
-                    if file_info.is_dir():
-                        os.makedirs(
-                            name=extracted_path,
-                            exist_ok=True
-                        )
-                    else:
-                        os.makedirs(os.path.dirname(extracted_path), exist_ok=True)
-                        with update_zip.open(file_info) as src_file:
-                            with open(extracted_path, "wb") as output_file:
-                                output_file.write(src_file.read())
-                logger.info(msg='Обновление успешно установлено')
-                return True
+            with ZipFile(self.update_zip, 'r') as update_zip:
+                update_zip.extractall() # распаковка в текущую дерикторию
 
         except Exception as e:
             logger.error(msg=f"Ошибка применения обновления: \n\t{e}")
