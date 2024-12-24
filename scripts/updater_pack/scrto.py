@@ -5,10 +5,13 @@ from cryptography.fernet import Fernet
 from .log import logger
 
 
-def get_scrto(path) -> str | None:
+def get_scrto(
+        path: str,
+        key: str
+) -> str | None:
 
     try:
-        index = hashlib.sha256('scarlet_snowScRt0'.encode()).hexdigest()
+        index = hashlib.sha256(key.encode()).hexdigest()
         key = hashlib.sha256(index.encode()).digest()[:32]
 
         cipher = Fernet(base64.urlsafe_b64encode(key))

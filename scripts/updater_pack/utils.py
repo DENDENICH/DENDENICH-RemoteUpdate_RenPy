@@ -1,14 +1,14 @@
 import os
 from .log import logger
 
-URL = 'https://cloud-api.yandex.net/v1/disk/resources/download'
+_URL = 'https://cloud-api.yandex.net/v1/disk/resources/download'
 
 def get_path_version_remote() -> str:
-    return f'{URL}?path=/game/version.txt'
+    return f'{_URL}?path=/game/version.txt'
 
 
 def get_path_update_remote()-> str:
-    return f'{URL}?path=/game/update.zip'
+    return f'{_URL}?path=/game/update.zip'
 
 
 def get_path_game_dir() -> str:
@@ -40,6 +40,7 @@ def get_path_scripts_dir() -> str:
 def get_path_version() -> str:
     """Возвращает путь к файлу с текущей версией игры"""
     return get_path_game_dir() + '/game/version.txt'
+
 
 __all__ = [
     'get_path_version_remote',

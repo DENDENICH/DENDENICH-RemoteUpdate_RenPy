@@ -20,6 +20,7 @@ class Updater:
         
     def __init__(
         self,
+        key: str,
         url_remote_version_game: str = get_path_version_remote(),
         url_remote_game_archive: str = get_path_update_remote(), 
         ):
@@ -39,7 +40,8 @@ class Updater:
         # получение расшифрованного токена
         path_scrto = get_path_scripts_dir() + '/scrto.enc'
         self.__scrto = get_scrto(
-            path=path_scrto
+            path=path_scrto,
+            key=key
         )
 
         self.http = PoolManager()
