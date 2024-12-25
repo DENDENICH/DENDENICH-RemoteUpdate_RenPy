@@ -82,41 +82,50 @@ class Window(Frame):
 
 
     @staticmethod
-    def _get_url():
+    @property
+    def _get_url() -> str:
         return 'https://cloud-api.yandex.net/v1/disk/resources?path=/game'
 
     @staticmethod
-    def _get_header(token):
+    def _get_header(token) -> dict:
         return {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': f'OAuth {token}'
         }
+    
+    @staticmethod
+    @property
+    def _get_path() -> str:
+        exists_dir = str(
+            os.path.abspath(__file__).replace(
+                os.path.basename(__file__),
+                ''
+                )
+            )
+        return os.path.join(exists_dir, '/scripts/updater_pack')
 
 
     def _check_scripts_dir(self) -> bool:
         """Проверка наличия папки с скриптами обновления в папке игры"""
         # получение текущей папки
         try:
-            exists_dir = str(
-            os.path.abspath(__file__).replace(
-                os.path.basename(__file__),
-                ''
-                )
-            )
-            updater_pack_folder = os.path.join(exists_dir, '/scripts/updater_pack')
+            
 
             # проверка наличия папки scripts/updater_pack
-            if os.path.exists(updater_pack_folder):
+            if os.path.exists(self._get_path):
                 required_files = [
                     'utils.py',
                     'updater.py',
                     'scrto.py',
                     'log.py',
                 ]
-                scrto = 'scrto.enc'
+                scrto_list = [
+                    'scrto.enc',
+                    'key.enc',
+                ]
 
-                for file in os.listdir(updater_pack_folder):
+                for file in os.listdir(self._get_path):
                     # если в updater_pack нет хотябы одного скрипта из списка
                     if file not in required_files:
                         messagebox.showwarning(
@@ -125,10 +134,10 @@ class Window(Frame):
                                     'Пожалуйста, добавьте его в каталог и запустите утилиту снова')
                         return False
                     # если хэшированный токен уже есть в пакете updater_pack
-                    if file == scrto:
+                    if file in scrto_list:
                         messagebox.showwarning(
                             title='Предупреждение',
-                            message=f'Хэшированный токен API Яндекс.Диска уже в есть системе'
+                            message=f'Хэшированный токен API Яндекс.Диска или ключ уже в есть системе'
                         )
                         return False
 
@@ -155,7 +164,10 @@ class Window(Frame):
 
         # проверка наличия значений в полях
         if not token:
-            messagebox.showwarning(title='Ошибка', message='Необходимо ввести токен и уникальный ключ')
+            messagebox.showwarning(
+                title='Ошибка', 
+                message='Необходимо ввести токен'
+                )
             return
 
         # установление контакта с сервером
@@ -198,7 +210,52 @@ class Window(Frame):
 
 
     def _create_token_and_key_file(self) -> None:
-        pass
+        """Создание файлов шифрованного токена от """
+
+        token = self.token_entry.get().strip()
+        key = self.key_entry.get().strip()
+        if not token or not key:
+            messagebox.showwarning(
+                title='Ошибка', 
+                message='Необходимо ввести токен и уникальный ключ'
+                )
+            return
+        
+        # Создание файла для хэшированного токена
+        scrto_path = self._get_path + '/scrto.enc'
+        try:
+            with open(scrto_path, 'wb') as file:
+                index = Hash.get_unique_index(key=key)
+                key_hash = Hash.generate_key(index=index)
+                hash_token = Hash.encrypt_token(
+                    token=token,
+                    key=key_hash
+                )
+                file.write(hash_token)
+        except Exception as e:
+            messagebox.showerror(
+                title='Ошибка', 
+                message=f'Не удалось создать и зашифровать токен\nОшибка: {e}'
+                )
+            return
+        
+        # создание файла для ключа
+        key_path = self._get_path + '/key.enc'
+        try:
+            with open(key_path, 'wb') as file:
+                file.write(key)
+        except Exception as e:
+            messagebox.showerror(
+                title='Ошибка', 
+                message=f'Не удалось создать ключ\nОшибка: {e}'
+                )
+            return
+        
+        messagebox.showinfo(
+                title='Успешно!', 
+                message='Токен и ключ были успешно созданны'
+                )
+        return
 
 
 if __name__ == '__main__':
