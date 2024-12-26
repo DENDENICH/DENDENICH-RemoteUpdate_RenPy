@@ -81,9 +81,8 @@ class Window(Frame):
         self.connect_button.pack(side='left')
 
 
-    @staticmethod
     @property
-    def _get_url() -> str:
+    def _get_url(self) -> str:
         return 'https://cloud-api.yandex.net/v1/disk/resources?path=/game'
 
     @staticmethod
@@ -94,23 +93,22 @@ class Window(Frame):
             'Authorization': f'OAuth {token}'
         }
     
-    @staticmethod
     @property
-    def _get_path() -> str:
+    def _get_path(self) -> str:
         exists_dir = str(
             os.path.abspath(__file__).replace(
                 os.path.basename(__file__),
                 ''
                 )
             )
-        return os.path.join(exists_dir, '/scripts/updater_pack')
+        path = os.path.join(exists_dir, '/scripts/updater_pack')
+        return path
 
 
     def _check_scripts_dir(self) -> bool:
         """Проверка наличия папки с скриптами обновления в папке игры"""
         # получение текущей папки
         try:
-            
 
             # проверка наличия папки scripts/updater_pack
             if os.path.exists(self._get_path):
@@ -175,7 +173,7 @@ class Window(Frame):
             http = PoolManager()
             response = http.request(
                 method="GET",
-                url=self._get_url(),
+                url=self._get_url,
                 headers=self._get_header(token=token)
             )
             if response.status == 200:
@@ -242,8 +240,8 @@ class Window(Frame):
         # создание файла для ключа
         key_path = self._get_path + '/key.enc'
         try:
-            with open(key_path, 'wb') as file:
-                file.write(key)
+            with open(key_path, 'w') as file:
+                file.write(key) # декодируем в байты
         except Exception as e:
             messagebox.showerror(
                 title='Ошибка', 
