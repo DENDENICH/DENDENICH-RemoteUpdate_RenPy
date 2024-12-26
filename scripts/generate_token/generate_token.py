@@ -100,7 +100,7 @@ class Window(Frame):
         exists_dir = str(
             os.path.abspath(__file__).replace(
                 os.path.basename(__file__),
-                ''
+                '',
                 )
             )
         return os.path.join(exists_dir, '/scripts/updater_pack')
