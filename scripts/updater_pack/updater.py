@@ -12,7 +12,8 @@ from .utils import (
     get_path_update_remote,
     get_path_version_remote,
     get_path_scripts_dir,
-    get_path_version
+    get_path_version,
+    get_decode_key
 )
 
 
@@ -20,7 +21,7 @@ class Updater:
         
     def __init__(
         self,
-        key: str,
+        decode_key: str = get_decode_key(),
         url_remote_version_game: str = get_path_version_remote(),
         url_remote_game_archive: str = get_path_update_remote(), 
         ):
@@ -41,7 +42,7 @@ class Updater:
         path_scrto = get_path_scripts_dir() + '/scrto.enc'
         self.__scrto = get_scrto(
             path=path_scrto,
-            key=key
+            key=decode_key
         )
 
         self.http = PoolManager()
@@ -54,6 +55,7 @@ class Updater:
 
         self.remote_version = self._fetch_remote_version
         self.exist_version = self._exist_version
+
 
     @property
     def _get_headers(self) -> dict:
