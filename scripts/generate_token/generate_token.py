@@ -47,43 +47,64 @@ class Window(Frame):
         super().__init__(master=root)
         self.root = root
 
+        # настройка для окна обновления
+        self.root.title("Создание токена и ключа")
+        self.root.geometry("400x200")  # Размер окна
+        self.root.resizable(False, False)  # Запрет изменения размера окна
+
+        # Отображение текущего фрейма
+        self.pack(padx=10, pady=10)
+
         # Поле для токена
         token_entry_label = Label(
             self,
-            text='Введите токен API Яндекс.Диска'
+            text='Введите токен API Яндекс.Диска:',
+            font=("Arial", 10, "bold"),
+            anchor="w"
         )
-        self.token_entry = Entry(self)
-        self.token_entry.pack()
+        token_entry_label.pack(fill="x", pady=5)
+        self.token_entry = Entry(self, width=50)
+        self.token_entry.pack(pady=5)
 
         # Поле для уникального ключа шифрования
         key_entry_label = Label(
             self,
-            text='Введите уникальный ключ для шифрования'
+            text='Введите уникальный ключ для шифрования:',
+            font=("Arial", 10, "bold"),
+            anchor="w"
         )
-        self.key_entry = Entry(self)
-        self.key_entry.pack()
+        key_entry_label.pack(fill="x", pady=5)
+        self.key_entry = Entry(self, width=50)
+        self.key_entry.pack(pady=5)
 
-        # Кнопка для запуска процесса генерации хэша; создание файла для токена и ключа
+        # Кнопки
+        button_frame = Frame(self)  # Создаём контейнер для кнопок
+        button_frame.pack(fill="x", pady=10)
+
         self.create_hash_button = Button(
-            self,
+            button_frame,
             text='Сгенерировать хэш',
-            state='disabled', # кнопка создания хэша не активна, пока не установится успешный контак с сервером
-            command=self._create_token_and_key_file
+            state='disabled',  # Кнопка создания хэша не активна
+            command=self._create_token_and_key_file,
+            bg="#4CAF50",
+            fg="white",
+            font=("Arial", 10, "bold")
         )
-        self.create_hash_button.pack(side='right')
+        self.create_hash_button.pack(side='right', padx=5)
 
-        # Кнопка соединения с сервером
         self.connect_button = Button(
-            self,
+            button_frame,
             text='Проверить токен',
-            command=self._connect_to_server
+            command=self._connect_to_server,
+            bg="#2196F3",
+            fg="white",
+            font=("Arial", 10, "bold")
         )
-        self.connect_button.pack(side='left')
+        self.connect_button.pack(side='left', padx=5)
 
 
-    @staticmethod
     @property
-    def _get_url() -> str:
+    def _get_url(self) -> str:
         return 'https://cloud-api.yandex.net/v1/disk/resources?path=/game'
 
     @staticmethod
@@ -94,27 +115,27 @@ class Window(Frame):
             'Authorization': f'OAuth {token}'
         }
     
-    @staticmethod
     @property
-    def _get_path() -> str:
+    def _get_path(self) -> str:
         exists_dir = str(
             os.path.abspath(__file__).replace(
                 os.path.basename(__file__),
                 '',
                 )
             )
-        return os.path.join(exists_dir, '/scripts/updater_pack')
+        path = os.path.join(exists_dir, 'game/updater_pack')
+        return path
 
 
     def _check_scripts_dir(self) -> bool:
         """Проверка наличия папки с скриптами обновления в папке игры"""
         # получение текущей папки
         try:
-            
 
-            # проверка наличия папки scripts/updater_pack
+            # проверка наличия папки game/scripts/updater_pack
             if os.path.exists(self._get_path):
                 required_files = [
+                    '__init__.py',
                     'utils.py',
                     'updater.py',
                     'scrto.py',
@@ -175,7 +196,7 @@ class Window(Frame):
             http = PoolManager()
             response = http.request(
                 method="GET",
-                url=self._get_url(),
+                url=self._get_url,
                 headers=self._get_header(token=token)
             )
             if response.status == 200:
@@ -242,8 +263,8 @@ class Window(Frame):
         # создание файла для ключа
         key_path = self._get_path + '/key.enc'
         try:
-            with open(key_path, 'wb') as file:
-                file.write(key)
+            with open(key_path, 'w') as file:
+                file.write(key) # декодируем в байты
         except Exception as e:
             messagebox.showerror(
                 title='Ошибка', 

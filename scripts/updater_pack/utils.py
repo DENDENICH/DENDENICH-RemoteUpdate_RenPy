@@ -42,10 +42,17 @@ def get_path_version() -> str:
     return get_path_game_dir() + '/game/version.txt'
 
 
+def get_decode_key() -> str:
+    """Возвращает ключ для декодирования токена"""
+    with open(get_path_scripts_dir() + '/key.enc', 'r') as file:
+        return file.read().strip()
+
+
 __all__ = [
     'get_path_version_remote',
     'get_path_update_remote',
     'get_path_game_dir',
     'get_path_scripts_dir',
-    'get_path_version'
+    'get_path_version',
+    'get_decode_key'
 ]
