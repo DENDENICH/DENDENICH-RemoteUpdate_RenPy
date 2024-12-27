@@ -20,7 +20,7 @@ def create_logger(
     return logging.getLogger('main_logger')
 
 logger = create_logger(
-    file_path='update_log'
+    file_path='update_log.txt'
 )
 
 __all__ = ['logger']

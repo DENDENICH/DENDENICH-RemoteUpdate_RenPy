@@ -109,7 +109,7 @@ class Updater:
             return ''
         
 
-    def download_update(self) -> bool:
+    def download_update(self, progress_callback = None) -> bool:
         """Скачивание актуального патча"""
 
         try:
@@ -124,11 +124,15 @@ class Updater:
                 download_url = json.loads(content)['href']
                 with self.http.request("GET", download_url, preload_content=False) as update, open(self.update_zip, "wb") as out_file:
                     chunk_size = 1024 * 1024  # Размер блока (1 MB)
+                    #download_progress = 0
                     while True:
                         data = update.read(chunk_size)
                         if not data:
                             break
                         out_file.write(data)
+                        #download_progress += len(data)
+                        #progress_callback(download_progress)  # вызываем коллбек с текущим прогрессом скачивания
+
                 update.release_conn()
                 logger.debug(msg='Обновление успешно скачано')
                 return True
