@@ -1,11 +1,16 @@
-from updater_pack import Updater
+from updater_pack import(
+    Updater,
+    PathException,
+    NetException,
+    OtherException
+)
+
 from tkinter import (
     messagebox,
     Tk,
     Label,
     Button,
     Frame,
-    ttk,
 )
 
 
@@ -14,7 +19,6 @@ class UpdaterWindows(Frame):
     def __init__(self, root: Tk):
         super().__init__(master=root)
         self.root = root
-        self.updater = Updater()
         self.pack(padx=10, pady=10)
 
         self.root.title("Обновление")
@@ -34,6 +38,28 @@ class UpdaterWindows(Frame):
         self.progress_label = Label(self, text="Прогресс", font=("Arial", 10), state='disabled')
         self.progress_label.pack(pady=6)
 
+        # Объект обновления
+        try:
+            self.updater = Updater()
+        except PathException as pe:
+            messagebox.showerror(
+                title="Ошибка",
+                message=f"Возникла ошибка путей:\n\t{pe}"
+            )
+            self.root.destroy()
+        except NetException as ne:
+            messagebox.showerror(
+                title="Ошибка",
+                message=f"Ошибка при подключении к серверу:\n\t{ne}"
+            )
+            self.root.destroy()
+        except OtherException as oe:
+            messagebox.showerror(
+                title="Ошибка",
+                message=f"Возникла непредвиденная ошибка:\n\t{oe}"
+            )
+            self.root.destroy()
+
         #
         # self.progress_bar = ttk.Progressbar(self, length=300, mode="determinate")
         # self.progress_bar.pack(pady=5)
@@ -48,15 +74,17 @@ class UpdaterWindows(Frame):
         new_version = self.updater.is_update_available()
         if new_version != self.updater.exist_version:
             self.progress_label.config(text="Скачивание обновления...")
-
+            self.perform_download()  # Запускаем процесс скачивания
         else:
             self.progress_label.config(text="Игра уже обновлена.")
+
 
     def perform_download(self):
         """Скачивание с отображением прогресса."""
         if self.updater.download_update(): # скачивание обновления
             self.progress_label.config(text="Применение обновления...")
-            self.perform_apply()
+            self.perform_apply() # запуск процесса применения обновления
+
 
     def perform_apply(self):
         """Применения обновления"""
@@ -69,6 +97,7 @@ class UpdaterWindows(Frame):
             )
 
 
-root = Tk()
-updater_window = UpdaterWindows(root)
-root.mainloop()
+if __name__ == '__main__':
+    root = Tk()
+    updater_window = UpdaterWindows(root)
+    root.mainloop()

@@ -13,7 +13,7 @@ from tkinter import (
 )
 
 class Hash:
-    """Класс для хэширования токена"""
+    """Class hashing token"""
 
     @staticmethod
     def get_unique_index(key: str) -> str:
@@ -31,8 +31,7 @@ class Hash:
     def encrypt_token(token, key) -> bytes:
         """Decode token, get decoding token"""
         cipher = Fernet(base64.urlsafe_b64encode(key))
-        encrpt = cipher.encrypt(token.encode("utf-8"))
-        return encrpt
+        return cipher.encrypt(token.encode("utf-8"))
 
 
 class Window(Frame):
@@ -41,11 +40,11 @@ class Window(Frame):
     def __init__(self, root: Tk):
 
         # проверка каталогов перед запуском утилиты
+        self.root = root
         if not self._check_scripts_dir():
-            root.destroy() # Утилита закрывается, если есть конфликты
+            self.root.destroy() # Утилита закрывается, если есть конфликты
 
         super().__init__(master=root)
-        self.root = root
 
         # настройка для окна обновления
         self.root.title("Создание токена и ключа")
@@ -168,7 +167,9 @@ class Window(Frame):
                 messagebox.showerror(
                     title='Ошибка',
                     message='Не найден пакет updater_pack в папке игры game.\n'
-                            'Возможно, вы запустили утилиту в не проекта игры, или пакет updater_pack отсутствует в директории game')
+                            'Возможно, вы запустили утилиту в не проекта игры, или пакет updater_pack отсутствует в директории game'
+                )
+
                 return False
 
         except Exception as e:
@@ -276,6 +277,7 @@ class Window(Frame):
                 title='Успешно!', 
                 message='Токен и ключ были успешно созданны'
                 )
+        self.root.destroy() # окно закрывается
         return
 
 

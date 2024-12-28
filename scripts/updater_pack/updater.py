@@ -1,18 +1,19 @@
-import os
 import json
 from pathlib import Path
 
 from zipfile import ZipFile
 from urllib3 import PoolManager
 
-from .log import logger
+from .exc import (
+    PathException,
+    NetException,
+    OtherException
+)
 from .scrto import get_scrto
 from .utils import (
-    get_path_game_dir,
-    get_path_update_remote,
-    get_path_version_remote,
-    get_path_scripts_dir,
-    get_path_version,
+    RemotePaths,
+    GameDirPaths,
+    ExistsVersion,
     get_decode_key
 )
 
@@ -22,8 +23,8 @@ class Updater:
     def __init__(
         self,
         decode_key: str = get_decode_key(),
-        url_remote_version_game: str = get_path_version_remote(),
-        url_remote_game_archive: str = get_path_update_remote(), 
+        url_remote_version_game: str = RemotePaths.get_path_version_remote(),
+        url_remote_game_archive: str = RemotePaths.get_path_update_remote(),
         ):
         
         """
@@ -36,10 +37,10 @@ class Updater:
         # добавить аргумент **kwargs для возможности 
         # вносить аргумента незашифрованого ключа аутентификации scrto
 
-        self.path_local_game_dir = Path(get_path_game_dir())
+        self.path_project_game_dir = Path(GameDirPaths.get_path_project_game_dir())
 
         # получение расшифрованного токена
-        path_scrto = get_path_scripts_dir() + '/scrto.enc'
+        path_scrto = GameDirPaths.get_path_scripts_dir() + '/scrto.enc'
         self.__scrto = get_scrto(
             path=path_scrto,
             key=decode_key
@@ -47,14 +48,13 @@ class Updater:
 
         self.http = PoolManager()
 
-        self.path_local_game_version = get_path_version()
-        self.update_zip = self.path_local_game_dir / 'update.zip'
+        self.update_zip = self.path_project_game_dir / 'update.zip'
 
         self.url_remote_version_game = url_remote_version_game
         self.url_remote_game_archive = url_remote_game_archive
 
         self.remote_version = self._fetch_remote_version
-        self.exist_version = self._exist_version
+        self.exist_version = ExistsVersion.get_exist_version()
 
 
     @property
@@ -86,30 +86,19 @@ class Updater:
                     url=download_url
                     )
                 version = response.data.decode("utf-8").strip()
-                logger.debug(msg=f'Версия успешно полученна с удаленного сервера - {version}')
                 return version
             else:
-                logger.error(msg=f'При запросе возникла ошибка - {response.status}')
-                return ''
-            
+                raise NetException(
+                    code=response.status,
+                    message='Error fetching remote version'
+                )
         except Exception as e:
-            logger.error(msg=f'Ошибка при получения актуальной версии:\n\t{e}')
-            return ''
+            raise OtherException(
+                message=f'Error \n\t{e}'
+            )
         
 
-    @property
-    def _exist_version(self) -> str:
-        """Получение текущей версии игры"""
-
-        if os.path.exists(self.path_local_game_version):
-            with open(self.path_local_game_version, "r") as f:
-                return f.read().strip()
-        else:
-            logger.error(msg=f'Файл <version.txt> отсутствует в системе')
-            return ''
-        
-
-    def download_update(self, progress_callback = None) -> bool:
+    def download_update(self, progress_callback = None) -> None:
         """Скачивание актуального патча"""
 
         try:
@@ -134,41 +123,35 @@ class Updater:
                         #progress_callback(download_progress)  # вызываем коллбек с текущим прогрессом скачивания
 
                 update.release_conn()
-                logger.debug(msg='Обновление успешно скачано')
-                return True
             else:
-                logger.error(msg=f'При запросе возникла ошибка - {response.status}')
-                return False
+                raise NetException(
+                    code=response.status,
+                    message='Error downloading'
+                )
             
         except Exception as e:
-            logger.error(msg=f'Ошибка скачивания обновления:\n\t{e}')
-            return False
+            raise OtherException(
+                message=f'Error \n\t{e}'
+            )
 
 
-    def apply_update(self) -> bool:
+    def apply_update(self) -> None:
         """Распаковывает архив обновления и добавляет/заменяет файлы в локальной директории игры."""
             
         try:
             with ZipFile(self.update_zip, 'r') as update_zip:
                 # распаковка в текущую дерикторию, замена/дополнение файлов игры
-                update_zip.extractall(self.path_local_game_dir)
-                logger.debug(msg="Обновление успешно применено")
+                update_zip.extractall(self.path_project_game_dir)
+
+        except FileNotFoundError:
+            raise PathException(
+                message=f'file patch not found'
+            )
 
         except Exception as e:
-            logger.error(msg=f"Ошибка применения обновления: \n\t{e}")
-            return False
-
-    def update_exist_version(self) -> bool:
-        """Обновление текущей версии игры"""
-
-        if os.path.exists(self.path_local_game_version):
-            with open(self.path_local_game_version, "w") as f:
-                f.write(self.remote_version)
-            logger.debug(msg=f"Версия успешно обновлена")
-            return True
-        else:
-            logger.error(msg=f'Файл <version.txt> отсутствует в системе')
-            return False
+            OtherException(
+                message=f'Error applying update \n\t{e}'
+            )
 
 
     def is_update_available(self) -> bool:

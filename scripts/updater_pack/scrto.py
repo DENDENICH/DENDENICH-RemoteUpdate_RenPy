@@ -3,6 +3,7 @@ import base64
 from cryptography.fernet import Fernet
 
 from .log import logger
+from .exc import PathException, OtherException
 
 
 def get_scrto(
@@ -20,9 +21,15 @@ def get_scrto(
         decrp = cipher.decrypt(encrp).decode("utf-8")
         return decrp
 
+    except FileNotFoundError:
+        raise PathException(
+            message='file scrto.enc not found in the updater_pack/ directory'
+        )
+
     except Exception as e:
-        logger.error(msg=f"Error get and decode scrto: \n\t{e}")
-        return None
+        raise OtherException(
+            message=f'Error operation with scrto: \n\t{e}'
+        )
     
 
 __all__ = ['get_scrto']
