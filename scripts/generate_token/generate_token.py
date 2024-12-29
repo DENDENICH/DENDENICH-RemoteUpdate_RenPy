@@ -158,7 +158,7 @@ class Window(Frame):
                 if update_scripts not in os.listdir(GAME_DIR_PACK):
                     messagebox.showwarning(
                         title='Предупреждение',
-                        message=f'В папке game не найден файл:\n\t{update_scripts}'
+                        message=f'В папке game не найден файл:\n{update_scripts}'
                                 '\nПожалуйста, добавьте его в каталог и запустите утилиту снова'
                     )
                     return False
@@ -168,7 +168,7 @@ class Window(Frame):
                     not_found_file = set(required_files) - set(os.listdir(UPDATER_PACK_DIR_PATH))
                     messagebox.showwarning(
                         title='Предупреждение',
-                        message=f'В пакете updater_pack не найден(ы) файл(ы):\n\t{"\n\t".join(not_found_file)}'
+                        message=f'В пакете updater_pack не найден(ы) файл(ы):\n{"\n".join(not_found_file)}'
                                 '\nПожалуйста, добавьте его в каталог и запустите утилиту снова'
                     )
                     return False
