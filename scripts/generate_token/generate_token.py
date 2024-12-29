@@ -1,5 +1,6 @@
 from urllib3 import PoolManager
 import os
+import sys
 import base64
 import hashlib
 from cryptography.fernet import Fernet
@@ -11,6 +12,25 @@ from tkinter import (
     Label,
     messagebox
 )
+
+
+def _get_scripts(dir_name: str) -> str:
+    if getattr(sys, 'frozen', False):
+        # Если скрипт был скомпилирован с помощью PyInstaller
+        exists_dir = os.path.dirname(sys.executable)
+    else:
+        exists_dir = str(
+            os.path.abspath(__file__).replace(
+                os.path.basename(__file__),
+                ''
+            )
+        )
+    path = os.path.join(exists_dir, dir_name)
+    return path
+
+UPDATER_PACK_DIR_PATH = _get_scripts(dir_name='game/updater_pack')
+GAME_DIR_PACK = _get_scripts(dir_name='game')
+
 
 class Hash:
     """Class hashing token"""
@@ -41,8 +61,8 @@ class Window(Frame):
 
         # проверка каталогов перед запуском утилиты
         self.root = root
-        # if not self._check_scripts_dir():
-        #     self.root.destroy() # Утилита закрывается, если есть конфликты
+        if not self._check_scripts_dir():
+            self.root.destroy() # Утилита закрывается, если есть конфликты с путями
 
         super().__init__(master=root)
 
@@ -113,17 +133,6 @@ class Window(Frame):
             'Accept': 'application/json',
             'Authorization': f'OAuth {token}'
         }
-    
-    @property
-    def _get_path(self) -> str:
-        exists_dir = str(
-            os.path.abspath(__file__).replace(
-                os.path.basename(__file__),
-                ''
-                )
-            )
-        path = os.path.join(exists_dir, 'game/updater_pack')
-        return path
 
 
     def _check_scripts_dir(self) -> bool:
@@ -131,8 +140,8 @@ class Window(Frame):
         # получение текущей папки
         try:
 
-            # проверка наличия папки game/scripts/updater_pack
-            if os.path.exists(self._get_path):
+            # проверка наличия папки game/updater_pack
+            if os.path.exists(UPDATER_PACK_DIR_PATH):
                 required_files = [
                     '__init__.py',
                     'utils.py',
@@ -140,20 +149,30 @@ class Window(Frame):
                     'scrto.py',
                     'log.py',
                 ]
+                update_scripts = 'update_scripts_ren.py'
                 scrto_list = [
                     'scrto.enc',
                     'key.enc',
                 ]
-                # Проверка на наличие всех необходимых скриптов
-                if len(os.listdir(self._get_path)) != len(required_files):
-                    not_found_file = set(required_files) - set(os.listdir(self._get_path))
+                # Проверка на наличие файла update_scripts_ren.py в папке game
+                if update_scripts not in os.listdir(GAME_DIR_PACK):
+                    messagebox.showwarning(
+                        title='Предупреждение',
+                        message=f'В папке game не найден файл:\n\t{update_scripts}'
+                                '\nПожалуйста, добавьте его в каталог и запустите утилиту снова'
+                    )
+
+                # Проверка на наличие всех необходимых скриптов в папке update_pack
+                if len(os.listdir(UPDATER_PACK_DIR_PATH)) != len(required_files):
+                    not_found_file = set(required_files) - set(os.listdir(UPDATER_PACK_DIR_PATH))
                     messagebox.showwarning(
                         title='Предупреждение',
                         message=f'В пакете updater_pack не найден(ы) файл(ы):\n\t{"\n\t".join(not_found_file)}'
-                                '\nПожалуйста, добавьте его в каталог и запустите утилиту снова')
+                                '\nПожалуйста, добавьте его в каталог и запустите утилиту снова'
+                    )
 
                 # Проверка на наличие уже созданных файлов токена и ключа
-                for file in os.listdir(self._get_path):
+                for file in os.listdir(UPDATER_PACK_DIR_PATH):
                     # если хэшированный токен уже есть в пакете updater_pack
                     if file in scrto_list:
                         messagebox.showwarning(
