@@ -11,9 +11,9 @@ from .exc import (
 )
 from .scrto import get_scrto
 from .utils import (
-    RemotePaths,
-    GameDirPaths,
-    ExistsVersion,
+    remote_paths,
+    game_dir_paths,
+    exists_version,
     get_decode_key
 )
 
@@ -23,8 +23,8 @@ class Updater:
     def __init__(
         self,
         decode_key: str = get_decode_key(),
-        url_remote_version_game: str = RemotePaths.get_path_version_remote(),
-        url_remote_game_archive: str = RemotePaths.get_path_update_remote(),
+        url_remote_version_game: str = remote_paths.get_path_version_remote,
+        url_remote_game_archive: str = remote_paths.get_path_update_remote,
         ):
         
         """
@@ -37,10 +37,10 @@ class Updater:
         # добавить аргумент **kwargs для возможности 
         # вносить аргумента незашифрованого ключа аутентификации scrto
 
-        self.path_project_game_dir = Path(GameDirPaths.get_path_project_game_dir())
+        self.path_project_game_dir = Path(game_dir_paths.get_path_project_game_dir)
 
         # получение расшифрованного токена
-        path_scrto = GameDirPaths.get_path_scripts_dir() + '/scrto.enc'
+        path_scrto = game_dir_paths.get_path_scripts_dir + '/scrto.enc'
         self.__scrto = get_scrto(
             path=path_scrto,
             key=decode_key
@@ -54,7 +54,7 @@ class Updater:
         self.url_remote_game_archive = url_remote_game_archive
 
         self.remote_version = self._fetch_remote_version
-        self.exist_version = ExistsVersion.get_exist_version()
+        self.exist_version = exists_version.get_exist_version
 
 
     @property
@@ -152,6 +152,10 @@ class Updater:
             OtherException(
                 message=f'Error applying update \n\t{e}'
             )
+
+        # Изменение локальной версии
+        exists_version.update_exist_version(new_version=self.remote_version)
+
 
 
     def is_update_available(self) -> bool:

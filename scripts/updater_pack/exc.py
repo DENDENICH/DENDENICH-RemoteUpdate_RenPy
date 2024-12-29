@@ -1,4 +1,4 @@
-from log import logger
+from .log import logger
 
 class RemoteException(Exception):
     def __init__(self, message: str):

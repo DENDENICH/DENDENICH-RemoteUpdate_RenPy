@@ -1,4 +1,5 @@
 import os
+import sys
 from .exc import PathException, OtherException
 
 
@@ -8,29 +9,36 @@ class RemotePaths:
 
     __URL = 'https://cloud-api.yandex.net/v1/disk/resources/download'
 
-    @classmethod
-    def get_path_version_remote(cls) -> str:
-        return f'{cls.__URL}?path=/game/version.txt'
+    @property
+    def get_path_version_remote(self) -> str:
+        return f'{self.__URL}?path=/game/version.txt'
 
-    @classmethod
-    def get_path_update_remote(cls)-> str:
-        return f'{cls.__URL}?path=/game/update.zip'
+    @property
+    def get_path_update_remote(self)-> str:
+        return f'{self.__URL}?path=/game/update.zip'
+
+
+remote_paths = RemotePaths()
 
 
 class GameDirPaths:
     """Методы для получения различных путей к проекту игры"""
 
-    __path_scripts_updater_pack = str(
+    if getattr(sys, 'frozen', False):
+        # Если скрипт был скомпилирован с помощью PyInstaller
+        __path_scripts_updater_pack = os.path.dirname(sys.executable)
+    else:
+        __path_scripts_updater_pack = str(
             os.path.abspath(__file__).replace(
                 os.path.basename(__file__),
                 ''
             )
         )
 
-    @classmethod
-    def get_path_project_game_dir(cls) -> str:
+    @property
+    def get_path_project_game_dir(self) -> str:
         """Возвращает путь к папке игры game"""
-        path = cls.__path_scripts_updater_pack.split('\\')
+        path = self.__path_scripts_updater_pack.split('\\')
         try:
             i = path.index('game')
         except ValueError:
@@ -42,28 +50,31 @@ class GameDirPaths:
         return '\\'.join(path[:i])
 
 
-    @classmethod
-    def get_path_scripts_dir(cls) -> str:
+    @property
+    def get_path_scripts_dir(self) -> str:
         """Возвращает путь к папке, где лежат скрипты модуля обновления"""
-        return cls.__path_scripts_updater_pack
+        return self.__path_scripts_updater_pack + '/updater_pack'
+
+
+game_dir_paths = GameDirPaths()
 
 
 class ExistsVersion:
     """Класс для работы с текущей версией"""
 
-    __path = GameDirPaths.get_path_project_game_dir() + '/game/version.txt'
+    __path = game_dir_paths.get_path_project_game_dir + '/game/version.txt'
 
-    @classmethod
-    def get_path_version(cls) -> str:
+    @property
+    def get_path_version(self) -> str:
         """Возвращает путь к файлу с текущей версией игры"""
-        return cls.__path
+        return self.__path
 
 
-    @classmethod
-    def get_exist_version(cls) -> str:
+    @property
+    def get_exist_version(self) -> str:
         """Получение текущей версии игры"""
         try:
-            with open(cls.__path, "r") as f:
+            with open(self.__path, "r") as f:
                 return f.read().strip()
         except FileNotFoundError:
             raise PathException(
@@ -74,11 +85,11 @@ class ExistsVersion:
                 message=f'Error: \n\t{e}'
             )
 
-    @classmethod
-    def update_exist_version(cls, new_version: str) -> bool:
+
+    def update_exist_version(self, new_version: str) -> None:
         """Обновление текущей версии игры"""
         try:
-            with open(cls.__path, "w") as f:
+            with open(self.__path, "w") as f:
                 f.write(new_version)
         except FileNotFoundError:
             raise PathException(
@@ -90,10 +101,13 @@ class ExistsVersion:
             )
 
 
+exists_version = ExistsVersion()
+
+
 def get_decode_key() -> str:
     """Возвращает ключ для декодирования токена"""
     try:
-        with open(GameDirPaths.get_path_scripts_dir() + '/key.enc', 'r') as file:
+        with open(game_dir_paths.get_path_scripts_dir + '/key.enc', 'r') as file:
             return file.read().strip()
     except FileNotFoundError:
         raise PathException(
@@ -102,8 +116,8 @@ def get_decode_key() -> str:
 
 
 __all__ = [
-    'RemotePaths',
-    'GameDirPaths',
-    'ExistsVersion',
+    'remote_paths',
+    'exists_version',
+    'game_dir_paths',
     'get_decode_key'
 ]

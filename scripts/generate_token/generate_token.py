@@ -148,8 +148,9 @@ class Window(Frame):
                     'updater.py',
                     'scrto.py',
                     'log.py',
+                    'exc.py'
                 ]
-                update_scripts = 'update_scripts_ren.exe'
+                update_scripts = 'update_script_ren.exe'
                 scrto_list = [
                     'scrto.enc',
                     'key.enc',
@@ -164,7 +165,7 @@ class Window(Frame):
                     return False
 
                 # Проверка на наличие всех необходимых скриптов в папке update_pack
-                if len(os.listdir(UPDATER_PACK_DIR_PATH)) != len(required_files):
+                if len(os.listdir(UPDATER_PACK_DIR_PATH)) < len(required_files):
                     not_found_file = set(required_files) - set(os.listdir(UPDATER_PACK_DIR_PATH))
                     messagebox.showwarning(
                         title='Предупреждение',
