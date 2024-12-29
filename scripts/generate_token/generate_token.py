@@ -264,7 +264,7 @@ class Window(Frame):
             return
         
         # Создание файла для хэшированного токена
-        scrto_path = self._get_path + '/scrto.enc'
+        scrto_path = UPDATER_PACK_DIR_PATH + '/scrto.enc'
         try:
             with open(scrto_path, 'wb') as file:
                 index = Hash.get_unique_index(key=key)
@@ -282,7 +282,7 @@ class Window(Frame):
             return
         
         # создание файла для ключа
-        key_path = self._get_path + '/key.enc'
+        key_path = UPDATER_PACK_DIR_PATH + '/key.enc'
         try:
             with open(key_path, 'w') as file:
                 file.write(key) # декодируем в байты
