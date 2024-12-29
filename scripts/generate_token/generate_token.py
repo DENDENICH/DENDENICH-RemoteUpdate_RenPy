@@ -149,7 +149,7 @@ class Window(Frame):
                     'scrto.py',
                     'log.py',
                 ]
-                update_scripts = 'update_scripts_ren.py'
+                update_scripts = 'update_scripts_ren.exe'
                 scrto_list = [
                     'scrto.enc',
                     'key.enc',
@@ -161,6 +161,7 @@ class Window(Frame):
                         message=f'В папке game не найден файл:\n\t{update_scripts}'
                                 '\nПожалуйста, добавьте его в каталог и запустите утилиту снова'
                     )
+                    return False
 
                 # Проверка на наличие всех необходимых скриптов в папке update_pack
                 if len(os.listdir(UPDATER_PACK_DIR_PATH)) != len(required_files):
@@ -170,7 +171,7 @@ class Window(Frame):
                         message=f'В пакете updater_pack не найден(ы) файл(ы):\n\t{"\n\t".join(not_found_file)}'
                                 '\nПожалуйста, добавьте его в каталог и запустите утилиту снова'
                     )
-
+                    return False
                 # Проверка на наличие уже созданных файлов токена и ключа
                 for file in os.listdir(UPDATER_PACK_DIR_PATH):
                     # если хэшированный токен уже есть в пакете updater_pack
