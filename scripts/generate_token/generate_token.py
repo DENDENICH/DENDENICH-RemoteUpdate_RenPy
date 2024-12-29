@@ -41,8 +41,8 @@ class Window(Frame):
 
         # проверка каталогов перед запуском утилиты
         self.root = root
-        if not self._check_scripts_dir():
-            self.root.destroy() # Утилита закрывается, если есть конфликты
+        # if not self._check_scripts_dir():
+        #     self.root.destroy() # Утилита закрывается, если есть конфликты
 
         super().__init__(master=root)
 
@@ -144,15 +144,16 @@ class Window(Frame):
                     'scrto.enc',
                     'key.enc',
                 ]
+                # Проверка на наличие всех необходимых скриптов
+                if len(os.listdir(self._get_path)) != len(required_files):
+                    not_found_file = set(required_files) - set(os.listdir(self._get_path))
+                    messagebox.showwarning(
+                        title='Предупреждение',
+                        message=f'В пакете updater_pack не найден(ы) файл(ы):\n\t{"\n\t".join(not_found_file)}'
+                                '\nПожалуйста, добавьте его в каталог и запустите утилиту снова')
 
+                # Проверка на наличие уже созданных файлов токена и ключа
                 for file in os.listdir(self._get_path):
-                    # если в updater_pack нет хотябы одного скрипта из списка
-                    if file not in required_files:
-                        messagebox.showwarning(
-                            title='Предупреждение',
-                            message=f'В пакете updater_pack отсутствует файл: {file}'
-                                    'Пожалуйста, добавьте его в каталог и запустите утилиту снова')
-                        return False
                     # если хэшированный токен уже есть в пакете updater_pack
                     if file in scrto_list:
                         messagebox.showwarning(
@@ -160,7 +161,6 @@ class Window(Frame):
                             message=f'Хэшированный токен API Яндекс.Диска или ключ уже в есть системе'
                         )
                         return False
-
                 return True
 
             else:
