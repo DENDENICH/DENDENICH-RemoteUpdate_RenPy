@@ -1,5 +1,7 @@
 import os
 import sys
+from .exc import PathException, OtherException
+
 
 
 class RemotePaths:
@@ -18,38 +20,41 @@ class RemotePaths:
 
 remote_paths = RemotePaths()
 
+
 class GameDirPaths:
     """Методы для получения различных путей к проекту игры"""
 
     if getattr(sys, 'frozen', False):
         # Если скрипт был скомпилирован с помощью PyInstaller
-        __path_game_project = os.path.dirname(sys.executable)
+        __path_scripts_updater_pack = os.path.dirname(sys.executable)
     else:
-        __path_game_project = str(
+        __path_scripts_updater_pack = str(
             os.path.abspath(__file__).replace(
                 os.path.basename(__file__),
                 ''
             )
         )
-    __game_dir_name = 'game'
-    __update_data_dir_name = 'update_data'
 
     @property
     def get_path_project_game_dir(self) -> str:
         """Возвращает путь к папке игры game"""
-        return os.path.join(
-            self.__path_game_project,
-            self.__game_dir_name
-        )
+        path = self.__path_scripts_updater_pack.split('\\')
+        try:
+            i = path.index('game')
+        except ValueError:
+            raise PathException(
+                message='dir game/ not found, or updater_pack/ directory is located in the non-game folder'
+            )
+        except Exception as e:
+            raise OtherException(f'Error: \n\t{e}')
+        return '\\'.join(path[:i])
+
 
     @property
-    def get_path_data_update_dir(self) -> str:
-        """Возвращает путь к папке update_data, где лежат данные обновления"""
-        return os.path.join(
-            self.__path_game_project,
-            self.__game_dir_name,
-            self.__update_data_dir_name
-        )
+    def get_path_scripts_dir(self) -> str:
+        """Возвращает путь к папке, где лежат скрипты модуля обновления"""
+        return self.__path_scripts_updater_pack + '/updater_pack'
+
 
 game_dir_paths = GameDirPaths()
 
@@ -57,11 +62,7 @@ game_dir_paths = GameDirPaths()
 class ExistsVersion:
     """Класс для работы с текущей версией"""
 
-    __file_name = 'version.enc'
-    __path = os.path.join(
-        game_dir_paths.get_path_data_update_dir,
-        __file_name
-    )
+    __path = game_dir_paths.get_path_project_game_dir + '/game/version.txt'
 
     @property
     def get_path_version(self) -> str:
@@ -72,26 +73,46 @@ class ExistsVersion:
     @property
     def get_exist_version(self) -> str:
         """Получение текущей версии игры"""
-        with open(self.__path, "r") as f:
-            return f.read().strip()
+        try:
+            with open(self.__path, "r") as f:
+                return f.read().strip()
+        except FileNotFoundError:
+            raise PathException(
+                message='file version.txt not found in game/ directory'
+            )
+        except Exception as e:
+            raise OtherException(
+                message=f'Error: \n\t{e}'
+            )
 
 
     def update_exist_version(self, new_version: str) -> None:
         """Обновление текущей версии игры"""
-        with open(self.__path, "w") as f:
-            f.write(new_version)
+        try:
+            with open(self.__path, "w") as f:
+                f.write(new_version)
+        except FileNotFoundError:
+            raise PathException(
+                message='file version.txt not found in game/ directory'
+            )
+        except Exception as e:
+            raise OtherException(
+                message=f'Error: \n\t{e}'
+            )
+
 
 exists_version = ExistsVersion()
 
 
 def get_decode_key() -> str:
     """Возвращает ключ для декодирования токена"""
-    path_to_key = os.path.join(
-        game_dir_paths.get_path_data_update_dir,
-        'key.enc'
-    )
-    with open(path_to_key, 'r') as file:
-        return file.read().strip()
+    try:
+        with open(game_dir_paths.get_path_scripts_dir + '/key.enc', 'r') as file:
+            return file.read().strip()
+    except FileNotFoundError:
+        raise PathException(
+            message='file key.enc not found in updater_pack/ directory'
+        )
 
 
 __all__ = [

@@ -15,6 +15,10 @@ class RemoteException(Exception):
         return self.message
 
 
+class PathException(RemoteException):
+    pass
+
+
 class NetException(RemoteException):
     def __init__(
             self,
@@ -29,6 +33,12 @@ class NetException(RemoteException):
         return f'Code: {self.code}\nMessage: {self.message}'
 
 
+class OtherException(RemoteException):
+    pass
+
+
 __all__ = [
+    'PathException',
     'NetException',
+    'OtherException'
 ]
