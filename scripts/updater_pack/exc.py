@@ -12,7 +12,7 @@ class RemoteException(Exception):
         logger.error(
             msg=f'{self.__class__.__name__}: {self.message}'
         )
-        return self.message
+        return self.user_message
 
 
 class PathException(RemoteException):

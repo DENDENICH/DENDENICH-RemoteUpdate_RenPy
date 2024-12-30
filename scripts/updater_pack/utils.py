@@ -26,34 +26,32 @@ class GameDirPaths:
 
     if getattr(sys, 'frozen', False):
         # Если скрипт был скомпилирован с помощью PyInstaller
-        __path_scripts_updater_pack = os.path.dirname(sys.executable)
+        __path_to_project_game_dir = os.path.dirname(sys.executable)
     else:
-        __path_scripts_updater_pack = str(
+        __path_to_project_game_dir = str(
             os.path.abspath(__file__).replace(
                 os.path.basename(__file__),
                 ''
             )
         )
+    __update_data_dir_name = 'update_data'
+    __game_name_dir_name = 'game'
 
     @property
     def get_path_project_game_dir(self) -> str:
         """Возвращает путь к папке игры game"""
-        path = self.__path_scripts_updater_pack.split('\\')
-        try:
-            i = path.index('game')
-        except ValueError:
-            raise PathException(
-                message='dir game/ not found, or updater_pack/ directory is located in the non-game folder'
-            )
-        except Exception as e:
-            raise OtherException(f'Error: \n\t{e}')
-        return '\\'.join(path[:i])
+        return self.__path_to_project_game_dir
 
 
     @property
-    def get_path_scripts_dir(self) -> str:
+    def get_path_data_update_dir(self) -> str:
         """Возвращает путь к папке, где лежат скрипты модуля обновления"""
-        return self.__path_scripts_updater_pack + '/updater_pack'
+        path = os.path.join(
+                self.__path_to_project_game_dir,
+                self.__game_name_dir_name,
+                self.__update_data_dir_name
+        )
+        return path
 
 
 game_dir_paths = GameDirPaths()
@@ -62,7 +60,11 @@ game_dir_paths = GameDirPaths()
 class ExistsVersion:
     """Класс для работы с текущей версией"""
 
-    __path = game_dir_paths.get_path_project_game_dir + '/game/version.txt'
+    __file_name ='version.enc'
+    __path = os.path.join(
+        game_dir_paths.get_path_data_update_dir,
+        __file_name
+    )
 
     @property
     def get_path_version(self) -> str:
@@ -78,7 +80,7 @@ class ExistsVersion:
                 return f.read().strip()
         except FileNotFoundError:
             raise PathException(
-                message='file version.txt not found in game/ directory'
+                message='file version.enc not found in update_data directory'
             )
         except Exception as e:
             raise OtherException(
@@ -93,7 +95,7 @@ class ExistsVersion:
                 f.write(new_version)
         except FileNotFoundError:
             raise PathException(
-                message='file version.txt not found in game/ directory'
+                message='file version.enc not found in update_data directory'
             )
         except Exception as e:
             raise OtherException(
@@ -104,20 +106,37 @@ class ExistsVersion:
 exists_version = ExistsVersion()
 
 
-def get_decode_key() -> str:
+def get_encode_key() -> str:
     """Возвращает ключ для декодирования токена"""
+    path_to_key = os.path.join(
+        game_dir_paths.get_path_data_update_dir,
+        'key.enc'
+    )
     try:
-        with open(game_dir_paths.get_path_scripts_dir + '/key.enc', 'r') as file:
-            return file.read().strip()
+        with open(path_to_key, 'r') as file:
+            value = file.read().strip()
+        return value
     except FileNotFoundError:
         raise PathException(
-            message='file key.enc not found in updater_pack/ directory'
+            message='file key.enc not found in update_data directory'
         )
+
+def get_log_path() -> str:
+    path = os.path.join(
+        game_dir_paths.get_path_data_update_dir,
+        'update_log.txt'
+    )
+    if not os.path.exists(path):
+        raise PathException(
+            message='file update_log.txt not found in update_data directory'
+        )
+    return path
 
 
 __all__ = [
     'remote_paths',
     'exists_version',
     'game_dir_paths',
-    'get_decode_key'
+    'get_encode_key',
+    'get_log_path'
 ]

@@ -15,44 +15,32 @@ from .utils import (
     remote_paths,
     game_dir_paths,
     exists_version,
-    get_decode_key
+    get_encode_key
 )
 
 
 class Updater:
         
-    def __init__(
-        self,
-        decode_key: str = get_decode_key(),
-        url_remote_version_game: str = remote_paths.get_path_version_remote,
-        url_remote_game_archive: str = remote_paths.get_path_update_remote,
-        ):
-        
-        """
-        params: scrto: str - путь к файлу токена для аутентификации запросов на сервер
-        params: local_game_dir: str - путь к игры game
-        params: remote_version_game: str - api путь к файлу с актуальной версией игры
-        params: remote_game_archive: str - api путь к файлу с актуальным патчем игры
-        """
-
-        # добавить аргумент **kwargs для возможности 
-        # вносить аргумента незашифрованого ключа аутентификации scrto
+    def __init__(self):
 
         self.path_project_game_dir = Path(game_dir_paths.get_path_project_game_dir)
 
-        # получение расшифрованного токена
-        path_scrto = game_dir_paths.get_path_scripts_dir + '/scrto.enc'
+        # Получение токена аутентификации
+        key = get_encode_key()
         self.__scrto = get_scrto(
-            path=path_scrto,
-            key=decode_key
+            path=os.path.join(
+                game_dir_paths.get_path_data_update_dir,
+                'scrto.enc'
+            ),
+            key=key
         )
 
+        # Формирование пути к файлу обновления
+        self.update_zip = os.path.join(
+            self.path_project_game_dir,
+            'update.zip'
+        )
         self.http = PoolManager()
-
-        self.update_zip = self.path_project_game_dir / 'update.zip'
-
-        self.url_remote_version_game = url_remote_version_game
-        self.url_remote_game_archive = url_remote_game_archive
 
         self.remote_version = self._fetch_remote_version
         self.exist_version = exists_version.get_exist_version
@@ -75,7 +63,7 @@ class Updater:
         try:
             response = self.http.request(
                 method="GET", 
-                url=self.url_remote_version_game, 
+                url=remote_paths.get_path_version_remote,
                 headers=self._get_headers
                 )
 
@@ -105,7 +93,7 @@ class Updater:
         try:
             response = self.http.request(
                 method="GET", 
-                url=self.url_remote_game_archive, 
+                url=remote_paths.get_path_update_remote,
                 headers=self._get_headers
                 )
 
@@ -146,7 +134,7 @@ class Updater:
 
         except FileNotFoundError:
             raise PathException(
-                message=f'file patch not found'
+                message=f'file patch not found in\n{self.path_project_game_dir}'
             )
 
         except Exception as e:
@@ -157,7 +145,6 @@ class Updater:
         os.remove(self.update_zip)
         # Изменение локальной версии
         exists_version.update_exist_version(new_version=self.remote_version)
-
 
 
     def is_update_available(self) -> bool:

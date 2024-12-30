@@ -81,14 +81,42 @@ class UpdaterWindows(Frame):
 
     def perform_download(self):
         """Скачивание с отображением прогресса."""
-        self.updater.download_update() # скачивание обновления
+        try:
+            self.updater.download_update() # скачивание обновления
+        except NetException as e:
+            messagebox.showerror(
+                title="Ошибка",
+                message=f"Возникла ошибка при скачивании обновления\n{e}"
+            )
+            self.update_button.config(state="normal")
+        except OtherException as e:
+            messagebox.showerror(
+                title="Ошибка",
+                message=f"Возникла непредвиденная ошибка при скачивании:\n{e}"
+            )
+            self.update_button.config(state="normal")
+
         self.progress_label.config(text="Применение обновления...")
         self.perform_apply() # запуск процесса применения обновления
 
 
     def perform_apply(self):
         """Применения обновления"""
-        self.updater.apply_update() # применение обновления
+        try:
+            self.updater.apply_update() # применение обновления
+        except PathException as e:
+            messagebox.showerror(
+                title="Ошибка",
+                message=f"Возникла ошибка при применении обновления:\n{e}"
+            )
+            self.update_button.config(state="normal")
+        except OtherException as e:
+            messagebox.showerror(
+                title="Ошибка",
+                message=f"Возникла непредвиденная ошибка при применении обновления:\n{e}"
+            )
+            self.update_button.config(state="normal")
+
         self.progress_label.config(text="Обновление успешно установлено.")
         self.update_button.config(state="normal")  # Включаем кнопку обратно
         messagebox.showinfo(
@@ -98,7 +126,6 @@ class UpdaterWindows(Frame):
         self.root.destroy()
 
 
-if __name__ == '__main__':
-    root = Tk()
-    updater_window = UpdaterWindows(root)
-    root.mainloop()
+root = Tk()
+updater_window = UpdaterWindows(root)
+root.mainloop()
