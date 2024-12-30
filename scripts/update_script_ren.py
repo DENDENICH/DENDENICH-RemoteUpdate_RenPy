@@ -1,6 +1,8 @@
 from updater_pack import(
     Updater,
+    PathException,
     NetException,
+    OtherException
 )
 
 from tkinter import (
@@ -22,10 +24,10 @@ class UpdaterWindows(Frame):
         # Объект обновления
         try:
             self.updater = Updater()
-        except FileNotFoundError as e:
+        except PathException as pe:
             messagebox.showerror(
                 title="Ошибка",
-                message=f"Возникла ошибка путей:\n\t{e}"
+                message=f"Возникла ошибка путей:\n\t{pe}"
             )
             self.root.destroy()
         except NetException as ne:
@@ -34,10 +36,10 @@ class UpdaterWindows(Frame):
                 message=f"Ошибка при подключении к серверу:\n\t{ne}"
             )
             self.root.destroy()
-        except Exception as e:
+        except OtherException as oe:
             messagebox.showerror(
                 title="Ошибка",
-                message=f"Возникла непредвиденная ошибка:\n\t{e}"
+                message=f"Возникла непредвиденная ошибка:\n\t{oe}"
             )
             self.root.destroy()
 
@@ -79,46 +81,14 @@ class UpdaterWindows(Frame):
 
     def perform_download(self):
         """Скачивание с отображением прогресса."""
-        try:
-            self.updater.download_update() # скачивание обновления
-        except NetException as ne:
-            messagebox.showerror(
-                title="Ошибка",
-                message=f"Ошибка при скачивании:\n\t{ne}"
-            )
-            self.update_button.config(state="normal")  # Включаем кнопку обратно
-            return
-        except Exception as e:
-            messagebox.showerror(
-                title="Ошибка",
-                message=f"Возникла непредвиденная ошибка при скачивании:\n\t{e}"
-            )
-            self.update_button.config(state="normal")  # Включаем кнопку обратно
-            return
-
+        self.updater.download_update() # скачивание обновления
         self.progress_label.config(text="Применение обновления...")
         self.perform_apply() # запуск процесса применения обновления
 
 
     def perform_apply(self):
         """Применения обновления"""
-        try:
-            self.updater.apply_update() # применение обновления
-        except FileNotFoundError as e:
-            messagebox.showerror(
-                title="Ошибка",
-                message=f"Возникла ошибка путей:\n\t{e}"
-            )
-            self.update_button.config(state="normal")  # Включаем кнопку обратно
-            return
-        except Exception as e:
-            messagebox.showerror(
-                title="Ошибка",
-                message=f"Возникла непредвиденная ошибка при скачивании:\n\t{e}"
-            )
-            self.update_button.config(state="normal")  # Включаем кнопку обратно
-            return
-
+        self.updater.apply_update() # применение обновления
         self.progress_label.config(text="Обновление успешно установлено.")
         self.update_button.config(state="normal")  # Включаем кнопку обратно
         messagebox.showinfo(
