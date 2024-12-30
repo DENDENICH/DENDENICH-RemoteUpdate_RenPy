@@ -121,16 +121,16 @@ def get_encode_key() -> str:
             message='file key.enc not found in update_data directory'
         )
 
-def get_log_path() -> str:
-    path = os.path.join(
-        game_dir_paths.get_path_data_update_dir,
-        'update_log.txt'
-    )
-    if not os.path.exists(path):
-        raise PathException(
-            message='file update_log.txt not found in update_data directory'
-        )
-    return path
+# def get_log_path() -> str:
+#     path = os.path.join(
+#         game_dir_paths.get_path_data_update_dir,
+#         'update_log.txt'
+#     )
+#     if not os.path.exists(path):
+#         raise PathException(
+#             message='file update_log.txt not found in update_data directory'
+#         )
+#     return path
 
 
 __all__ = [
@@ -138,5 +138,4 @@ __all__ = [
     'exists_version',
     'game_dir_paths',
     'get_encode_key',
-    'get_log_path'
 ]
