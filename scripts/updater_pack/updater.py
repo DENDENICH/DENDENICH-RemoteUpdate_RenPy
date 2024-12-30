@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from zipfile import ZipFile
@@ -152,7 +153,8 @@ class Updater:
             OtherException(
                 message=f'Error applying update \n\t{e}'
             )
-
+        # Удаление архива
+        os.remove(self.update_zip)
         # Изменение локальной версии
         exists_version.update_exist_version(new_version=self.remote_version)
 
