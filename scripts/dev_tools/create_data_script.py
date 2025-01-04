@@ -3,6 +3,8 @@ import os
 import sys
 import base64
 import hashlib
+import random
+import string
 from cryptography.fernet import Fernet
 from tkinter import (
     Frame,
@@ -29,7 +31,14 @@ def _get_scripts(dir_name: str) -> str:
     return path
 
 UPDATE_DATA_DIR_PATH = _get_scripts(dir_name='game/update_data')
-GAME_DIR_PACK = _get_scripts(dir_name='game')
+
+
+def generate_key(length=32):
+    # Создаем набор символов: буквы и цифры
+    characters = string.ascii_letters + string.digits + string.punctuation
+    # Генерируем строку заданной длины
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
 
 
 class Hash:
@@ -84,17 +93,6 @@ class Window(Frame):
         token_entry_label.pack(fill="x", pady=5)
         self.token_entry = Entry(self, width=50)
         self.token_entry.pack(pady=5)
-
-        # Поле для уникального ключа шифрования
-        key_entry_label = Label(
-            self,
-            text='Введите уникальный ключ для шифрования:',
-            font=("Arial", 10, "bold"),
-            anchor="w"
-        )
-        key_entry_label.pack(fill="x", pady=5)
-        self.key_entry = Entry(self, width=50)
-        self.key_entry.pack(pady=5)
 
         # Кнопки
         button_frame = Frame(self)  # Создаём контейнер для кнопок
@@ -223,7 +221,7 @@ class Window(Frame):
         """Создание файлов токена, ключа и версии """
 
         token = self.token_entry.get().strip()
-        key = self.key_entry.get().strip()
+        key = generate_key()
         if not token or not key:
             messagebox.showwarning(
                 title='Ошибка', 
