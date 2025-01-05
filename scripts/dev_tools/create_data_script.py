@@ -1,72 +1,27 @@
 from urllib3 import PoolManager
-import os
-import sys
-import base64
-import hashlib
-import random
-import string
-from cryptography.fernet import Fernet
 from tkinter import (
     Frame,
+    Toplevel,
     Tk,
     Entry,
     Button,
     Label,
     messagebox
 )
+from utils import (
+    Hash,
+    generate_key,
+    get_path,
+    create_folder,
+    get_listdir,
+    check_exists_path
+)
 
 
-def _get_scripts(dir_name: str) -> str:
-    if getattr(sys, 'frozen', False):
-        # Если скрипт был скомпилирован с помощью PyInstaller
-        exists_dir = os.path.dirname(sys.executable)
-    else:
-        exists_dir = str(
-            os.path.abspath(__file__).replace(
-                os.path.basename(__file__),
-                ''
-            )
-        )
-    path = os.path.join(exists_dir, dir_name)
-    return path
-
-UPDATE_DATA_DIR_PATH = _get_scripts(dir_name='game/update_data')
-
-
-def generate_key(length=32):
-    # Создаем набор символов: буквы и цифры
-    characters = string.ascii_letters + string.digits + string.punctuation
-    # Генерируем строку заданной длины
-    random_string = ''.join(random.choice(characters) for _ in range(length))
-    return random_string
-
-
-class Hash:
-    """Class hashing token"""
-
-    @staticmethod
-    def get_unique_index(key: str) -> str:
-        """Get unique index"""
-        return hashlib.sha256(key.encode()).hexdigest()
-
-
-    @staticmethod
-    def generate_key(index) -> bytes:
-        """Get key"""
-        return hashlib.sha256(index.encode()).digest()[:32]
-
-
-    @staticmethod
-    def encrypt_token(token, key) -> bytes:
-        """Decode token, get decoding token"""
-        cipher = Fernet(base64.urlsafe_b64encode(key))
-        return cipher.encrypt(token.encode("utf-8"))
-
-
-class Window(Frame):
+class Window(Toplevel):
     """Класс окна обновления"""
 
-    def __init__(self, root: Tk):
+    def __init__(self, root: Tk, exists_path: str):
 
         # проверка каталогов перед запуском утилиты
         self.root = root
@@ -80,8 +35,6 @@ class Window(Frame):
         self.root.geometry("400x200")  # Размер окна
         self.root.resizable(False, False)  # Запрет изменения размера окна
 
-        # Отображение текущего фрейма
-        self.pack(padx=10, pady=10)
 
         # Поле для токена
         token_entry_label = Label(
@@ -119,6 +72,13 @@ class Window(Frame):
         )
         self.connect_button.pack(side='left', padx=5)
 
+        # Переменные путей
+        self.update_folder_path = get_path(
+            exists_path, # папка проекта
+            'game', # папка игры
+            'update_data' # папка, хранящая данные для обновления
+        )
+
 
     @property
     def _get_url(self) -> str:
@@ -139,14 +99,14 @@ class Window(Frame):
         try:
 
             # проверка наличия папки game/update_data
-            if os.path.exists(UPDATE_DATA_DIR_PATH):
+            if check_exists_path(self.update_folder_path):
                 data_list = [
                     'scrto.enc',
                     'key.enc',
                     'version.enc'
                 ]
                 # проверка наличия всех необходимых файлов в папке update_data
-                if len(os.listdir(UPDATE_DATA_DIR_PATH)) == len(data_list): # если все файлы из списка data_list есть:
+                if len(get_listdir(self.update_folder_path)) == len(data_list): # если все файлы из списка data_list есть:
                     messagebox.showwarning(
                         title='Предупреждение',
                         message=f'Все необходимые данные обновления уже есть в проекте'
@@ -155,7 +115,7 @@ class Window(Frame):
                 return True
 
             else:
-                os.mkdir(UPDATE_DATA_DIR_PATH) # создаём папку update_data
+                create_folder(path_dir=self.update_folder_path) # создаём папку update_data
                 return True
 
         except Exception as e:
@@ -230,7 +190,10 @@ class Window(Frame):
             return
         
         # Создание файла для хэшированного токена
-        scrto_path = UPDATE_DATA_DIR_PATH + '/scrto.enc'
+        scrto_path = get_path(
+            self.update_folder_path,
+            'scrto.enc'
+        )
         try:
             with open(scrto_path, 'wb') as file:
                 index = Hash.get_unique_index(key=key)
@@ -248,7 +211,10 @@ class Window(Frame):
             return
         
         # создание файла для ключа
-        key_path = UPDATE_DATA_DIR_PATH + '/key.enc'
+        key_path = get_path(
+            self.update_folder_path,
+            'key.enc'
+        )
         try:
             with open(key_path, 'w') as file:
                 file.write(key)
@@ -260,7 +226,10 @@ class Window(Frame):
             return
 
         # создание файла для версии
-        version_path = UPDATE_DATA_DIR_PATH + '/version.enc'
+        version_path = get_path(
+            self.update_folder_path,
+            'version.enc'
+        )
         version = '1.0'
         try:
             with open(version_path, 'w') as file:
@@ -279,8 +248,3 @@ class Window(Frame):
         self.root.destroy() # окно закрывается
         return
 
-
-if __name__ == '__main__':
-    root = Tk()
-    win = Window(root)
-    root.mainloop()
