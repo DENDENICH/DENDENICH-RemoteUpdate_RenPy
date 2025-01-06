@@ -7,11 +7,10 @@ from tkinter import (
     filedialog
 )
 from utils import (
-    get_path,
     check_exists_path
 )
-from create_patch import CreatePatchWindow, initialize_repo_if_needed
-from create_data_script import CreateDataWindow
+from create_patch import CreatePatchWindow
+from create_data import CreateDataWindow
 
 
 class MainWindow(Frame):
@@ -20,16 +19,6 @@ class MainWindow(Frame):
         super().__init__(master=root)
         self.root = root
         self.pack(padx=10, pady=10)
-
-        # Получение текущего пути до скрипта
-        self.exists_path = get_path(exists_path=True)
-        self.game_path = get_path(
-            self.exists_path,
-            'game'
-        )
-
-        # Инициализация репозитория
-        self.repo = initialize_repo_if_needed(self.game_path)
 
         # Список путей к папкам
         self.folder_paths = []
@@ -68,8 +57,6 @@ class MainWindow(Frame):
 
     def open_create_patch_window(self):
         CreatePatchWindow(
-            game_path=self.exists_path,
-            repo=self.repo,
             root=self.root
         )
 
@@ -77,7 +64,7 @@ class MainWindow(Frame):
     def open_create_data_window(self):
         CreateDataWindow(
             root=self.root,
-            exists_path=self.exists_path
+            game_project_path=self.current_folder
         )
 
 
