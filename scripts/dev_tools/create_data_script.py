@@ -1,4 +1,9 @@
+import base64
+import hashlib
+import random
+import string
 from urllib3 import PoolManager
+from cryptography.fernet import Fernet
 from tkinter import (
     Frame,
     Toplevel,
@@ -9,8 +14,6 @@ from tkinter import (
     messagebox
 )
 from utils import (
-    Hash,
-    generate_key,
     get_path,
     create_folder,
     get_listdir,
@@ -18,7 +21,37 @@ from utils import (
 )
 
 
-class Window(Toplevel):
+class Hash:
+    """Class hashing token"""
+
+    @staticmethod
+    def get_unique_index(key: str) -> str:
+        """Get unique index"""
+        return hashlib.sha256(key.encode()).hexdigest()
+
+
+    @staticmethod
+    def generate_key(index) -> bytes:
+        """Get key"""
+        return hashlib.sha256(index.encode()).digest()[:32]
+
+
+    @staticmethod
+    def encrypt_token(token, key) -> bytes:
+        """Decode token, get decoding token"""
+        cipher = Fernet(base64.urlsafe_b64encode(key))
+        return cipher.encrypt(token.encode("utf-8"))
+
+
+def generate_key(length=32):
+    # Создаем набор символов: буквы и цифры
+    characters = string.ascii_letters + string.digits + string.punctuation
+    # Генерируем строку заданной длины
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
+
+
+class CreateDataWindow(Toplevel):
     """Класс окна обновления"""
 
     def __init__(self, root: Tk, exists_path: str):
