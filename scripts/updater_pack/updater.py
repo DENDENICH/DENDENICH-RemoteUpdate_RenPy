@@ -5,13 +5,13 @@ from pathlib import Path
 from zipfile import ZipFile
 from urllib3 import PoolManager
 
-from .exc import (
+from exc import (
     PathException,
     NetException,
     OtherException
 )
-from .scrto import get_scrto
-from .utils import (
+from scrto import get_scrto
+from utils import (
     remote_paths,
     game_dir_paths,
     exists_version,
@@ -23,21 +23,21 @@ class Updater:
         
     def __init__(self):
 
-        self.path_project_game_dir = Path(game_dir_paths.get_path_project_game_dir)
+        self.path_to_project_game_dir = Path(game_dir_paths.path_to_project_game_dir)
 
         # Получение токена аутентификации
         key = get_encode_key()
         self.__scrto = get_scrto(
             path=os.path.join(
-                game_dir_paths.get_path_data_update_dir,
+                game_dir_paths.path_to_update_data_dir_name,
                 'scrto.enc'
             ),
             key=key
         )
 
         # Формирование пути к файлу обновления
-        self.update_zip = os.path.join(
-            self.path_project_game_dir,
+        self.path_to_update_zip = os.path.join(
+            self.path_to_project_game_dir,
             'update.zip'
         )
         self.http = PoolManager()

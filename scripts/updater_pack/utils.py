@@ -1,6 +1,6 @@
-import os
+from os import path
 import sys
-from .exc import PathException, OtherException
+from exc import PathException, OtherException
 
 
 
@@ -24,34 +24,29 @@ remote_paths = RemotePaths()
 class GameDirPaths:
     """Методы для получения различных путей к проекту игры"""
 
-    if getattr(sys, 'frozen', False):
-        # Если скрипт был скомпилирован с помощью PyInstaller
-        __path_to_project_game_dir = os.path.dirname(sys.executable)
-    else:
-        __path_to_project_game_dir = str(
-            os.path.abspath(__file__).replace(
-                os.path.basename(__file__),
-                ''
+    def __init__(self):
+        self.path_to_project_game_dir = self.get_path_to_project_game(with_project_game=False) # Путь к проекту игры без папки проекта
+        self.path_to_update_data_dir_name = path.join(
+            self.get_path_to_project_game(with_project_game=True), # Путь к проекту игры включая папку проекта
+            'game',
+            'update_data'
+        )
+
+
+    @classmethod
+    def get_path_to_project_game(cls, with_project_game: bool):
+        """Возвращает путь до папки проекта игры, но не включительно самой папки"""
+        if getattr(sys, 'frozen', False):
+            # Если скрипт был скомпилирован с помощью PyInstaller
+            ph = path.dirname(sys.executable)
+        else:
+            ph = str(
+                path.abspath(__file__).replace(
+                    path.basename(__file__),
+                    ''
+                )
             )
-        )
-    __update_data_dir_name = 'update_data'
-    __game_name_dir_name = 'game'
-
-    @property
-    def get_path_project_game_dir(self) -> str:
-        """Возвращает путь к папке игры game"""
-        return self.__path_to_project_game_dir
-
-
-    @property
-    def get_path_data_update_dir(self) -> str:
-        """Возвращает путь к папке, где лежат скрипты модуля обновления"""
-        path = os.path.join(
-                self.__path_to_project_game_dir,
-                self.__game_name_dir_name,
-                self.__update_data_dir_name
-        )
-        return path
+        return ph if with_project_game else '/'.join(*ph.split('//')[0:-1:0]) # Из пути удаляем папку проекта игры
 
 
 game_dir_paths = GameDirPaths()
@@ -61,8 +56,8 @@ class ExistsVersion:
     """Класс для работы с текущей версией"""
 
     __file_name ='version.enc'
-    __path = os.path.join(
-        game_dir_paths.get_path_data_update_dir,
+    __path = path.join(
+        game_dir_paths.path_to_update_data_dir_name,
         __file_name
     )
 
@@ -108,8 +103,8 @@ exists_version = ExistsVersion()
 
 def get_encode_key() -> str:
     """Возвращает ключ для декодирования токена"""
-    path_to_key = os.path.join(
-        game_dir_paths.get_path_data_update_dir,
+    path_to_key = path.join(
+        game_dir_paths.path_to_update_data_dir_name,
         'key.enc'
     )
     try:
@@ -120,17 +115,6 @@ def get_encode_key() -> str:
         raise PathException(
             message='file key.enc not found in update_data directory'
         )
-
-# def get_log_path() -> str:
-#     path = os.path.join(
-#         game_dir_paths.get_path_data_update_dir,
-#         'update_log.txt'
-#     )
-#     if not os.path.exists(path):
-#         raise PathException(
-#             message='file update_log.txt not found in update_data directory'
-#         )
-#     return path
 
 
 __all__ = [

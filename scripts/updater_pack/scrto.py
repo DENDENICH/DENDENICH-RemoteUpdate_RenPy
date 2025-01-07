@@ -2,7 +2,7 @@ import hashlib
 import base64
 from cryptography.fernet import Fernet
 
-from .exc import PathException, OtherException
+from exc import PathException, OtherException
 
 
 
