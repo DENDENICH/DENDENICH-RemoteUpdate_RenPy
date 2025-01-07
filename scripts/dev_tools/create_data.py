@@ -1,19 +1,28 @@
-from urllib3 import PoolManager
-import os
 import base64
 import hashlib
+import random
+import string
+from urllib3 import PoolManager
 from cryptography.fernet import Fernet
 from tkinter import (
     Frame,
+    Toplevel,
     Tk,
     Entry,
     Button,
     Label,
     messagebox
 )
+from utils import (
+    get_path,
+    create_folder,
+    get_listdir,
+    check_exists_path
+)
+
 
 class Hash:
-    """Класс для хэширования токена"""
+    """Class hashing token"""
 
     @staticmethod
     def get_unique_index(key: str) -> str:
@@ -31,29 +40,40 @@ class Hash:
     def encrypt_token(token, key) -> bytes:
         """Decode token, get decoding token"""
         cipher = Fernet(base64.urlsafe_b64encode(key))
-        encrpt = cipher.encrypt(token.encode("utf-8"))
-        return encrpt
+        return cipher.encrypt(token.encode("utf-8"))
 
 
-class Window(Frame):
+def generate_key(length=32):
+    # Создаем набор символов: буквы и цифры
+    characters = string.ascii_letters + string.digits + string.punctuation
+    # Генерируем строку заданной длины
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
+
+
+class CreateDataWindow(Toplevel):
     """Класс окна обновления"""
 
-    def __init__(self, root: Tk):
+    def __init__(self, root: Tk, game_project_path: str):
 
+<<<<<<< HEAD:scripts/generate_token/generate_token.py
         # # проверка каталогов перед запуском утилиты
         # if not self._check_scripts_dir():
         #     root.destroy() # Утилита закрывается, если есть конфликты
+=======
+        # проверка каталогов перед запуском утилиты
+        self.root = root
+        if not self._check_scripts_dir():
+            self.root.destroy() # Утилита закрывается, если есть конфликты с путями
+>>>>>>> refs/remotes/origin/main:scripts/dev_tools/create_data.py
 
         super().__init__(master=root)
-        self.root = root
 
-        # настройка для окна обновления
-        self.root.title("Создание токена и ключа")
+        # настройка для окна
+        self.root.title("Создание и генерация данных")
         self.root.geometry("400x200")  # Размер окна
         self.root.resizable(False, False)  # Запрет изменения размера окна
 
-        # Отображение текущего фрейма
-        self.pack(padx=10, pady=10)
 
         # Поле для токена
         token_entry_label = Label(
@@ -66,24 +86,13 @@ class Window(Frame):
         self.token_entry = Entry(self, width=50)
         self.token_entry.pack(pady=5)
 
-        # Поле для уникального ключа шифрования
-        key_entry_label = Label(
-            self,
-            text='Введите уникальный ключ для шифрования:',
-            font=("Arial", 10, "bold"),
-            anchor="w"
-        )
-        key_entry_label.pack(fill="x", pady=5)
-        self.key_entry = Entry(self, width=50)
-        self.key_entry.pack(pady=5)
-
         # Кнопки
         button_frame = Frame(self)  # Создаём контейнер для кнопок
         button_frame.pack(fill="x", pady=10)
 
         self.create_hash_button = Button(
             button_frame,
-            text='Сгенерировать хэш',
+            text='Создать данные',
             state='disabled',  # Кнопка создания хэша не активна
             command=self._create_token_and_key_file,
             bg="#4CAF50",
@@ -102,6 +111,13 @@ class Window(Frame):
         )
         self.connect_button.pack(side='left', padx=5)
 
+        # Переменные путей
+        self.update_folder_path = get_path(
+            game_project_path, # папка проекта
+            'game', # папка игры
+            'update_data' # папка, хранящая данные для обновления
+        )
+
 
     @property
     def _get_url(self) -> str:
@@ -114,6 +130,7 @@ class Window(Frame):
             'Accept': 'application/json',
             'Authorization': f'OAuth {token}'
         }
+<<<<<<< HEAD:scripts/generate_token/generate_token.py
     
     @property
     def _get_path(self) -> str:
@@ -125,6 +142,8 @@ class Window(Frame):
             )
         path = os.path.join(exists_dir, 'game/updater_pack')
         return path
+=======
+>>>>>>> refs/remotes/origin/main:scripts/dev_tools/create_data.py
 
 
     def _check_scripts_dir(self) -> bool:
@@ -132,49 +151,30 @@ class Window(Frame):
         # получение текущей папки
         try:
 
-            # проверка наличия папки game/scripts/updater_pack
-            if os.path.exists(self._get_path):
-                required_files = [
-                    '__init__.py',
-                    'utils.py',
-                    'updater.py',
-                    'scrto.py',
-                    'log.py',
-                ]
-                scrto_list = [
+            # проверка наличия папки game/update_data
+            if check_exists_path(self.update_folder_path):
+                data_list = [
                     'scrto.enc',
                     'key.enc',
+                    'version.enc'
                 ]
-
-                for file in os.listdir(self._get_path):
-                    # если в updater_pack нет хотябы одного скрипта из списка
-                    if file not in required_files:
-                        messagebox.showwarning(
-                            title='Предупреждение',
-                            message=f'В пакете updater_pack отсутствует файл: {file}'
-                                    'Пожалуйста, добавьте его в каталог и запустите утилиту снова')
-                        return False
-                    # если хэшированный токен уже есть в пакете updater_pack
-                    if file in scrto_list:
-                        messagebox.showwarning(
-                            title='Предупреждение',
-                            message=f'Хэшированный токен API Яндекс.Диска или ключ уже в есть системе'
-                        )
-                        return False
-
+                # проверка наличия всех необходимых файлов в папке update_data
+                if len(get_listdir(self.update_folder_path)) == len(data_list): # если все файлы из списка data_list есть:
+                    messagebox.showwarning(
+                        title='Предупреждение',
+                        message=f'Все необходимые данные обновления уже есть в проекте'
+                    )
+                    return False
                 return True
 
             else:
-                messagebox.showerror(
-                    title='Ошибка',
-                    message='Не найден пакет updater_pack в папке игры game.\n'
-                            'Возможно, вы запустили утилиту в не проекта игры, или пакет updater_pack отсутствует в директории game')
-                return False
+                create_folder(path_dir=self.update_folder_path) # создаём папку update_data
+                return True
 
         except Exception as e:
             messagebox.showerror(
                 title='Ошибка',
-                message=f'Ошибка при получении текущей папки:\n{e}')
+                message=f'Возникло непредвиденное исключение:\n{e}')
             return False
 
 
@@ -231,10 +231,10 @@ class Window(Frame):
 
 
     def _create_token_and_key_file(self) -> None:
-        """Создание файлов шифрованного токена от """
+        """Создание файлов токена, ключа и версии """
 
         token = self.token_entry.get().strip()
-        key = self.key_entry.get().strip()
+        key = generate_key()
         if not token or not key:
             messagebox.showwarning(
                 title='Ошибка', 
@@ -243,7 +243,10 @@ class Window(Frame):
             return
         
         # Создание файла для хэшированного токена
-        scrto_path = self._get_path + '/scrto.enc'
+        scrto_path = get_path(
+            self.update_folder_path,
+            'scrto.enc'
+        )
         try:
             with open(scrto_path, 'wb') as file:
                 index = Hash.get_unique_index(key=key)
@@ -261,25 +264,40 @@ class Window(Frame):
             return
         
         # создание файла для ключа
-        key_path = self._get_path + '/key.enc'
+        key_path = get_path(
+            self.update_folder_path,
+            'key.enc'
+        )
         try:
             with open(key_path, 'w') as file:
-                file.write(key) # декодируем в байты
+                file.write(key)
         except Exception as e:
             messagebox.showerror(
                 title='Ошибка', 
                 message=f'Не удалось создать ключ\nОшибка: {e}'
                 )
             return
+
+        # создание файла для версии
+        version_path = get_path(
+            self.update_folder_path,
+            'version.enc'
+        )
+        version = '1.0'
+        try:
+            with open(version_path, 'w') as file:
+                file.write(version)
+        except Exception as e:
+            messagebox.showerror(
+                title='Ошибка',
+                message=f'Не удалось создать файл версии\nОшибка: {e}'
+            )
+            return
         
         messagebox.showinfo(
                 title='Успешно!', 
                 message='Токен и ключ были успешно созданны'
                 )
+        self.root.destroy() # окно закрывается
         return
 
-
-if __name__ == '__main__':
-    root = Tk()
-    win = Window(root)
-    root.mainloop()
