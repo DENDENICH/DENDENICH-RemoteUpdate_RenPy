@@ -40,9 +40,9 @@ class Window(Frame):
 
     def __init__(self, root: Tk):
 
-        # проверка каталогов перед запуском утилиты
-        if not self._check_scripts_dir():
-            root.destroy() # Утилита закрывается, если есть конфликты
+        # # проверка каталогов перед запуском утилиты
+        # if not self._check_scripts_dir():
+        #     root.destroy() # Утилита закрывается, если есть конфликты
 
         super().__init__(master=root)
         self.root = root
