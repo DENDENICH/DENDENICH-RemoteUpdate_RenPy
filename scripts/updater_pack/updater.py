@@ -128,13 +128,13 @@ class Updater:
         """Распаковывает архив обновления и добавляет/заменяет файлы в локальной директории игры."""
             
         try:
-            with ZipFile(self.update_zip, 'r') as update_zip:
+            with ZipFile(self.path_to_update_zip, 'r') as update_zip:
                 # распаковка в текущую дерикторию, замена/дополнение файлов игры
-                update_zip.extractall(self.path_project_game_dir)
+                update_zip.extractall(self.path_to_project_game_dir)
 
         except FileNotFoundError:
             raise PathException(
-                message=f'file patch not found in\n{self.path_project_game_dir}'
+                message=f'file patch not found in\n{self.path_to_project_game_dir}'
             )
 
         except Exception as e:
@@ -142,7 +142,7 @@ class Updater:
                 message=f'Error applying update \n\t{e}'
             )
         # Удаление архива
-        os.remove(self.update_zip)
+        os.remove(self.path_to_update_zip)
         # Изменение локальной версии
         exists_version.update_exist_version(new_version=self.remote_version)
 
