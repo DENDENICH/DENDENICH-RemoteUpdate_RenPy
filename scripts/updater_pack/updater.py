@@ -100,7 +100,7 @@ class Updater:
             if response.status == 200:
                 content = response.data.decode("utf-8")
                 download_url = json.loads(content)['href']
-                with self.http.request("GET", download_url, preload_content=False) as update, open(self.update_zip, "wb") as out_file:
+                with self.http.request("GET", download_url, preload_content=False) as update, open(self.path_to_update_zip, "wb") as out_file:
                     chunk_size = 1024 * 1024  # Размер блока (1 MB)
                     #download_progress = 0
                     while True:
@@ -149,6 +149,6 @@ class Updater:
 
     def is_update_available(self) -> bool:
         return self.exist_version != self.remote_version
-    
+
 
 __all__ = ['Updater']
