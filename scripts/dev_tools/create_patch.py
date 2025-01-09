@@ -9,7 +9,8 @@ from tkinter import (
 )
 from utils import (
     get_path,
-    check_exists_path
+    check_exists_path,
+    create_folder
 )
 
 
@@ -87,6 +88,13 @@ class CreatePatchWindow(Toplevel):
         # Данные для архива
         folder_archive_name = "update_1.0"
 
+        # Создание папки для нового обновления
+        create_folder(
+            path_dir=self.exists_path_to_script,
+            name_dir=folder_archive_name
+        )
+
+        # Создание пути для архива
         archive_path = os.path.join(
             self.exists_path_to_script,
             folder_archive_name,
@@ -151,11 +159,17 @@ class CreatePatchWindow(Toplevel):
         try:
             new_version = self.increment_version(self.latest_zip_folder)
             new_folder_patch_name = f"update_{new_version}"
+            # Создание папки для нового патча
+            create_folder(
+                path_dir=self.exists_path_to_script,
+                name_dir=new_folder_patch_name
+            )
             new_patch_path = get_path(
                             self.exists_path_to_script,
                             new_folder_patch_name,
                             self.archive_update_name
                         )
+            # Смена имени последнего архива
             self.latest_zip_folder = new_folder_patch_name
 
             with zipfile.ZipFile(new_patch_path, "w") as zipf:
@@ -163,7 +177,6 @@ class CreatePatchWindow(Toplevel):
                     zipf.write(file_path, os.path.relpath(file_path, new_folder))
 
             # Обновление файла last_patch.txt
-
             self.save_last_patch_info(self.latest_zip_folder)
 
             # Создание файла версии
@@ -185,7 +198,8 @@ class CreatePatchWindow(Toplevel):
             file.write(f"{version}")
 
 
-    def increment_version(self, archive_name: str):
+    @staticmethod
+    def increment_version(archive_name: str):
         """Увеличивает версию архива на 0.1."""
         version = archive_name.split("_")[1].split(".zip")[0]
         major, minor = map(int, version.split("."))

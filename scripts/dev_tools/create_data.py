@@ -56,16 +56,18 @@ class CreateDataWindow(Toplevel):
 
     def __init__(self, root: Tk, game_project_path: str):
 
-<<<<<<< HEAD:scripts/generate_token/generate_token.py
-        # # проверка каталогов перед запуском утилиты
-        # if not self._check_scripts_dir():
-        #     root.destroy() # Утилита закрывается, если есть конфликты
-=======
         # проверка каталогов перед запуском утилиты
         self.root = root
+
+        # Путь до папки с данными обновления
+        self.update_folder_path = get_path(
+            game_project_path,  # папка проекта
+            'game',  # папка игры
+            'update_data'  # папка, хранящая данные для обновления
+        )
+
         if not self._check_scripts_dir():
-            self.root.destroy() # Утилита закрывается, если есть конфликты с путями
->>>>>>> refs/remotes/origin/main:scripts/dev_tools/create_data.py
+            self.root.destroy() # Утилита закрывается, если есть конфликты
 
         super().__init__(master=root)
 
@@ -111,13 +113,6 @@ class CreateDataWindow(Toplevel):
         )
         self.connect_button.pack(side='left', padx=5)
 
-        # Переменные путей
-        self.update_folder_path = get_path(
-            game_project_path, # папка проекта
-            'game', # папка игры
-            'update_data' # папка, хранящая данные для обновления
-        )
-
 
     @property
     def _get_url(self) -> str:
@@ -130,20 +125,6 @@ class CreateDataWindow(Toplevel):
             'Accept': 'application/json',
             'Authorization': f'OAuth {token}'
         }
-<<<<<<< HEAD:scripts/generate_token/generate_token.py
-    
-    @property
-    def _get_path(self) -> str:
-        exists_dir = str(
-            os.path.abspath(__file__).replace(
-                os.path.basename(__file__),
-                '',
-                )
-            )
-        path = os.path.join(exists_dir, 'game/updater_pack')
-        return path
-=======
->>>>>>> refs/remotes/origin/main:scripts/dev_tools/create_data.py
 
 
     def _check_scripts_dir(self) -> bool:
@@ -301,3 +282,7 @@ class CreateDataWindow(Toplevel):
         self.root.destroy() # окно закрывается
         return
 
+
+__all__ = [
+    'CreateDataWindow'
+]

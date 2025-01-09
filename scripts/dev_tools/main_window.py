@@ -22,7 +22,7 @@ class MainWindow(Frame):
 
         # Список путей к папкам
         self.folder_paths = []
-        self.current_folder = None
+        self.current_folder: str | None = None
 
         # Загрузка путей из файла
         self.load_paths()
@@ -48,11 +48,14 @@ class MainWindow(Frame):
                                               state="disabled")
         self.switch_folder_button.pack(pady=5)
 
-        self.create_data_button = Button(root, text="Создать данные", command=self.open_create_data_window, state="disabled")
+        self.create_data_button = Button(root, text="Создать токен обновления", command=self.open_create_data_window, state="disabled")
         self.create_data_button.pack(pady=5)
 
         self.create_patch_button = Button(root, text="Создать патч", command=self.open_create_patch_window, state="disabled")
         self.create_patch_button.pack(pady=5)
+
+        # Обновление интерфейса после загрузки путей путей
+        self.update_interface()
 
 
     def open_create_patch_window(self):
@@ -86,7 +89,7 @@ class MainWindow(Frame):
 
     def add_folder(self):
         """Добавляет новый путь к папке."""
-        folder = filedialog.askdirectory(title="Выберите папку")
+        folder = filedialog.askdirectory(title="Выберите папку к дистрибутиву")
         if folder:
             if folder not in self.folder_paths:
                 self.folder_paths.append(folder)
@@ -117,7 +120,8 @@ class MainWindow(Frame):
     def update_interface(self):
         """Обновляет состояние интерфейса."""
         if self.current_folder:
-            self.folder_label.config(text=f"Текущая папка: {self.current_folder}")
+            name_game_dir = self.current_folder.split('/')[-1]
+            self.folder_label.config(text=f"Текущая папка: {name_game_dir}")
             self.create_data_button.config(state="normal")
             self.create_patch_button.config(state="normal")
             self.switch_folder_button.config(state="normal")
