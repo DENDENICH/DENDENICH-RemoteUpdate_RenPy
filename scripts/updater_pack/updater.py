@@ -1,6 +1,5 @@
 import json
 import os
-from pathlib import Path
 
 from zipfile import ZipFile
 from urllib3 import PoolManager
@@ -23,7 +22,7 @@ class Updater:
         
     def __init__(self):
 
-        self.path_to_project_game_dir = Path(game_dir_paths.path_to_project_game_dir)
+        self.path_to_project_game_dir = game_dir_paths.path_to_project_game_dir
 
         # Получение токена аутентификации
         key = get_encode_key()

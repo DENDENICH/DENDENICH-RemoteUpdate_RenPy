@@ -38,7 +38,7 @@ class GameDirPaths:
         """Возвращает путь до папки проекта игры, но не включительно самой папки"""
         if getattr(sys, 'frozen', False):
             # Если скрипт был скомпилирован с помощью PyInstaller
-            ph = path.dirname(sys.executable)
+            ph = str(path.dirname(sys.executable))
         else:
             ph = str(
                 path.abspath(__file__).replace(
@@ -46,7 +46,8 @@ class GameDirPaths:
                     ''
                 )
             )
-        return ph if with_project_game else '/'.join(*ph.split('//')[0:-1:0]) # Из пути удаляем папку проекта игры
+        # Из пути удаляем папку проекта игры
+        return ph if with_project_game else '/'.join(ph.split('//')[:-1:])
 
 
 game_dir_paths = GameDirPaths()
@@ -55,7 +56,7 @@ game_dir_paths = GameDirPaths()
 class ExistsVersion:
     """Класс для работы с текущей версией"""
 
-    __file_name ='version.enc'
+    __file_name = 'version.enc'
     __path = path.join(
         game_dir_paths.path_to_update_data_dir_name,
         __file_name

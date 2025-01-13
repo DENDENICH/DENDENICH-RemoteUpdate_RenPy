@@ -5,7 +5,6 @@ from cryptography.fernet import Fernet
 from exc import PathException, OtherException
 
 
-
 def get_scrto(
         path: str,
         key: str
