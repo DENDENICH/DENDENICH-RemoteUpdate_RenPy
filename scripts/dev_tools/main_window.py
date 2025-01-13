@@ -31,17 +31,17 @@ class MainWindow(Frame):
 
         # Настройка для окна обновления
         self.root.title("Создание и генерация данных")
-        self.root.geometry("400x200")  # Размер окна
+        self.root.geometry("400x400")  # Размер окна
         self.root.resizable(False, False)  # Запрет изменения размера окна
 
         # Кнопки
         button_frame = Frame(self)  # Создаём контейнер для кнопок
         button_frame.pack(fill="x", pady=10)
 
-        self.folder_label = Label(root, text="Выберите папку", font=("Arial", 14))
+        self.folder_label = Label(root, text="Выберите папку проекта игры", font=("Arial", 14))
         self.folder_label.pack(pady=10)
 
-        self.add_folder_button = Button(root, text="Добавить папку", command=self.add_folder)
+        self.add_folder_button = Button(root, text="Выберите папку проекта игры", command=self.add_folder)
         self.add_folder_button.pack(pady=5)
 
         self.switch_folder_button = Button(root, text="Переключить папку", command=self.switch_folder,
@@ -96,15 +96,15 @@ class MainWindow(Frame):
                 self.current_folder = folder
                 self.save_paths()
                 self.update_interface()
-                messagebox.showinfo("Успех", f"Папка добавлена: {folder}")
+                messagebox.showinfo("Успех", f"Папка проекта игры добавлена: {folder}")
             else:
-                messagebox.showwarning("Внимание", "Эта папка уже добавлена.")
+                messagebox.showwarning("Внимание", "Эта папка проекта уже добавлена.")
 
 
     def switch_folder(self):
         """Переключает текущую папку."""
-        if not self.folder_paths:
-            messagebox.showerror("Ошибка", "Нет доступных папок для переключения.")
+        if len(self.folder_paths) <= 1:
+            messagebox.showerror("Ошибка", "Нет доступных папок для переключения. Пожалуйста, добавьте ещё одну папку проекта игры")
             return
 
         # Выбор новой папки из списка
@@ -126,7 +126,7 @@ class MainWindow(Frame):
             self.create_patch_button.config(state="normal")
             self.switch_folder_button.config(state="normal")
         else:
-            self.folder_label.config(text="Выберите папку")
+            self.folder_label.config(text="Выберите папку проекта игры")
             self.create_data_button.config(state="disabled")
             self.create_patch_button.config(state="disabled")
             self.switch_folder_button.config(state="disabled")

@@ -4,6 +4,7 @@ from tkinter import (
     Toplevel,
     Button,
     Label,
+    Frame,
     messagebox,
     filedialog
 )
@@ -22,7 +23,7 @@ class CreatePatchWindow(Toplevel):
 
         # настройка для окна
         self.root.title("Создание патча")
-        self.root.geometry("400x300")  # Размер окна
+        self.root.geometry("400x400")  # Размер окна
         self.root.resizable(False, False)  # Запрет изменения размера окна
 
         # Переменные
@@ -32,13 +33,18 @@ class CreatePatchWindow(Toplevel):
         self.exists_path_to_script = get_path(exists_path=True)
 
         # Интерфейс
-        self.info_label = Label(root, text="Программа готова к работе", font=("Arial", 14))
+
+        # Кнопки
+        button_frame = Frame(self)  # Создаём контейнер для кнопок
+        button_frame.pack(fill="x", pady=10)
+
+        self.info_label = Label(button_frame, text="Программа готова к работе", font=("Arial", 14))
         self.info_label.pack(pady=10)
 
-        self.select_folder_button = Button(root, text="Создать базовый архив", command=self.create_initial_archive)
+        self.select_folder_button = Button(button_frame, text="Создать базовый патч", command=self.create_initial_archive)
         self.select_folder_button.pack(pady=5)
 
-        self.create_patch_button = Button(root, text="Создать патч", command=self.create_patch, state="disabled")
+        self.create_patch_button = Button(button_frame, text="Создать новый патч", command=self.create_patch, state="disabled")
         self.create_patch_button.pack(pady=5)
 
         # Проверка данных о последнем архиве
@@ -67,7 +73,7 @@ class CreatePatchWindow(Toplevel):
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Ошибка чтения файла last_patch.txt: {e}")
         else:
-            self.info_label.config(text="Файл last_patch.txt не найден. Создайте новый архив.")
+            self.info_label.config(text="Архивов нет. Создайте свой первый базовый архив!")
 
 
     def save_last_patch_info(self, folder):
@@ -81,7 +87,7 @@ class CreatePatchWindow(Toplevel):
 
     def create_initial_archive(self):
         """Создаёт первоначальный архив и сохраняет его информацию."""
-        folder_game = filedialog.askdirectory(title="Выберите базовую папку для архива")
+        folder_game = filedialog.askdirectory(title="Выберите дистрибутив для создания базового архива")
         if not folder_game:
             return
 
@@ -110,6 +116,10 @@ class CreatePatchWindow(Toplevel):
 
             # Сохранение информации о последнем архиве
             self.save_last_patch_info(folder_archive_name)
+
+            # Создание файла версии в базовом авхиве (1.0)
+            self.latest_zip_folder = folder_archive_name
+            self.create_version_file(version='1.0')
 
             self.info_label.config(text=f"Базовый патч создан")
             self.create_patch_button.config(state="normal")
