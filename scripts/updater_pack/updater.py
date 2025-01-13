@@ -107,8 +107,9 @@ class Updater:
                         if not data:
                             break
                         out_file.write(data)
-                        #download_progress += len(data)
-                        #progress_callback(download_progress)  # вызываем коллбек с текущим прогрессом скачивания
+                        # вызываем коллбек с текущим прогрессом скачивания
+                        download_progress += len(data)
+                        progress_callback(download_progress)  
 
                 update.release_conn()
             else:

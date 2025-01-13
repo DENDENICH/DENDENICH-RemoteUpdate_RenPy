@@ -1,3 +1,4 @@
+from threading import Thread
 from updater import (
     Updater,
 )
@@ -12,6 +13,7 @@ from tkinter import (
     Label,
     Button,
     Frame,
+    ttk
 )
 
 
@@ -62,9 +64,13 @@ class UpdaterWindows(Frame):
         self.progress_label.pack(pady=6)
 
 
-        #
-        # self.progress_bar = ttk.Progressbar(self, length=300, mode="determinate")
-        # self.progress_bar.pack(pady=5)
+        # Прогрессбар для прогресса скачивания и установки обновления
+        self.progress_bar = ttk.Progressbar(self, length=300, mode="determinate")
+        self.progress_bar.pack(pady=5)
+
+    def progress_callback(self, value):
+        """Работа с прогрессом"""
+        self.progress_bar += value
 
 
     def start_update(self):
@@ -83,7 +89,12 @@ class UpdaterWindows(Frame):
     def perform_download(self):
         """Скачивание с отображением прогресса."""
         try:
-            self.updater.download_update() # скачивание обновления
+            process_download = Thread(
+                target=self.updater.download_update,
+                args=(self.process_download,)
+                ) # скачивание обновления
+            process_download.run()
+
         except NetException as e:
             messagebox.showerror(
                 title="Ошибка",
@@ -104,7 +115,11 @@ class UpdaterWindows(Frame):
     def perform_apply(self):
         """Применения обновления"""
         try:
-            self.updater.apply_update() # применение обновления
+            process_apply = Thread(
+                target=self.updater.apply_update,
+                ) # применение обновления
+            
+            process_apply.run() # применение обновления
         except PathException as e:
             messagebox.showerror(
                 title="Ошибка",
